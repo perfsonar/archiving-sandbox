@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+  testpoint:
+    image: perfsonar/testpoint:latest
+    volumes:
+       - ./pscheduler_archives:/etc/pscheduler/default-archives
+  target:
+    image: perfsonar/testpoint:latest
+  rabbit:
+    image: rabbitmq:3-management
+    env_file: .env
+    ports:
+      - "15672:15672"
+      - "5671:5671"
+      - "5672:5672"
+  elasticsearch:
+       image: elasticsearch:7.6.2
+       env_file: .env
+       ports:
+         - "9200:9200"
+         - "9300:9300"
+  logstash:
+       image: logstash:7.6.2
+       env_file: .env
+       depends_on: 
+        - elasticsearch
+       ports:
+         - "5044:5044"
+         - "9600:9600"
+       volumes:
+           - ./logstash_pipeline:/usr/share/logstash/pipeline/
+  kibana:
+       image: kibana:7.6.2
+       env_file: .env
+       ports:
+         - "5601:5601"

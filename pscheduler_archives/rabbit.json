@@ -1,0 +1,7 @@
+{
+    "archiver": "rabbitmq",
+    "data": {
+        "_url": "amqp://rabbit",
+        "routing-key": "pscheduler_raw"
+    }
+}
