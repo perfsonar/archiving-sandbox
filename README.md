@@ -90,7 +90,7 @@ docker-compose exec testpoint bash
 
 ## Tips and Troubleshooting
 
-- Make sure you have enough memory allocated to conatiners in Docker. If you see elasticsearch crashing when you try to bring things up this is likely why. You can change this value in the "Preferences" of the Docker UI if you are using Mac or Windows. A value of 1GB seemed too low and 4GB seems to work, but you can probably get away with something in between if needed. 
+- Make sure you have enough memory allocated to containers in Docker. If you see elasticsearch crashing when you try to bring things up this is likely why. You can change this value in the "Preferences" of the Docker UI if you are using Mac or Windows. A value of 1GB seemed too low and 4GB seems to work, but you can probably get away with something in between if needed. 
 
 - Sometimes for debugging purposes it is useful to run `docker-compose up`(i.e. drop `-d` mentioned in previous sections) so all the output from the containers is written to stdout. 
 
