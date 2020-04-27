@@ -100,7 +100,7 @@ docker-compose exec testpoint bash
 
 - In general you should use `-v` with `docker-compose down` to delete any "anonymous" volumes. These are volumes docker-compose creates that save the state of the container beyond the shared volumes we have defined. This is great if you want to keep the elastic data around, but it causes problems for `httpd` in the perfsonar containers in particular. If you don't use `-v` and one or both of the perfSONAR containers complain about not being able to find pscheduler, simply run the command `httpd` at the command-line (no `systemctl` in docker-land, so literally just type `httpd` at the command-line). 
 
-- If you run a pscheduler test and it doesn't arrive in RabbitMQ then restart the containers. This happens in testing from time-to-time and its currently unclear why.  
+- If you run a pscheduler test and it doesn't arrive in RabbitMQ check `/var/log/pscheduler.log` for a message like `archiver WARNING  Ignoring /etc/pscheduler/default-archives/rabbit.json: No archiver "rabbitmq" is avaiable.`. If this happens run your command with like `pscheduler task --archive /etc/pscheduler/default-archives/rabbit.json ...`. Need to investigate closer why this is happening. 
 
 - If you need to run ruby in the logstash container to test a filter, run the following:
 ```
