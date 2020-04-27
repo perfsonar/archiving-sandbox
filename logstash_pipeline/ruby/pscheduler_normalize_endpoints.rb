@@ -5,6 +5,10 @@ def parse_endpoint(endpoint)
     # Sometimes endpoints aren't just straight-up hostnames or ips. 
     #  In cases like 'disk-to-disk' they can be URLs or host:port
     #  This function extracts just the hostname or IP in that case
+    if !endpoint then
+        return
+    end
+    
     if URI.regexp().match(endpoint) then
         #handle case where its a URL
         begin
