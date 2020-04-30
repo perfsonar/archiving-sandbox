@@ -25,11 +25,11 @@ def duration_to_seconds(duration_string)
     end
     
     #time for math
-    total_seconds = 0
-    total_seconds += duration[:seconds] ? duration[:seconds].to_i : 0
-    total_seconds += duration[:minutes] ? duration[:minutes].to_i * 60 : 0
-    total_seconds += duration[:hours] ? duration[:hours].to_i * 3600 : 0
-    total_seconds += duration[:days] ? duration[:days].to_i * 86400 : 0
+    total_seconds = 0.0
+    total_seconds += duration[:seconds] ? duration[:seconds].to_f : 0
+    total_seconds += duration[:minutes] ? duration[:minutes].to_f * 60 : 0
+    total_seconds += duration[:hours] ? duration[:hours].to_f * 3600 : 0
+    total_seconds += duration[:days] ? duration[:days].to_f * 86400 : 0
     
     return total_seconds
 end
