@@ -82,7 +82,7 @@ class Histogram
         
         mean_num = 0
         sample_size = 0
-        @hist_dict.keys.each() do |k|
+        @hist_dict.keys.sort_by{ |_k, _v| _k.to_f }.each() do |k|
             #only can do statistics for histograms with numeric buckets
             begin
                 k_val = k.to_f
@@ -92,7 +92,7 @@ class Histogram
             end
             
             #Update the raw histogram - this is understood by elastic
-            stats['histogram']['values'].push(k)
+            stats['histogram']['values'].push(k_val)
             stats['histogram']['counts'].push(count_val)
             
             # update calculation values
@@ -111,7 +111,7 @@ class Histogram
         stats['mean'] = (mean_num/(1.0*sample_size))
         
         #sort items. make sure sort as numbers not strings
-        sorted_hist = @hist_dict.keys.sort.map { |key| [key.to_f, @hist_dict[key]] }
+        sorted_hist = @hist_dict.keys.sort_by{ |_k, _v| _k.to_f }.map { |key| [key.to_f, @hist_dict[key]] }
         #make mode floats.
         stats['mode'] = stats['mode'].map { |x| x.to_f }
         #get min and max
