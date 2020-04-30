@@ -1,0 +1,42 @@
+{
+  "_doc": {
+    "_meta": {},
+    "_source": {},
+    "dynamic_templates": [
+      {
+        "ip_addresses": {
+          "mapping": {
+            "type": "ip"
+          },
+          "match": "ip"
+        }
+      },
+      {
+        "histograms": {
+          "mapping": {
+            "type": "histogram"
+          },
+          "match": "histogram"
+        }
+      },
+      {
+        "json_unparsed": {
+          "mapping": {
+            "type": "object",
+            "enabled": false
+          },
+          "match": "json"
+        }
+      },
+      {
+        "location": {
+          "path_match": "*.geo.location",
+          "mapping": {
+            "type": "geo_point"
+          }
+        }
+      }
+    ],
+    "properties": {}
+  }
+}

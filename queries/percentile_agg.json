@@ -1,0 +1,11 @@
+GET /pscheduler_latency-2020.04.29/_search
+{
+    "size": 0,
+    "aggs" : {
+        "percentile_agg" : {
+            "percentiles" : {
+                "field" : "result.latency.histogram" 
+            }
+        }
+    }
+}
