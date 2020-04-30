@@ -49,6 +49,7 @@ def filter(event)
         if path_mtu then
             event.set("[@metadata][result][mtu]", path_mtu)
         end
+        event.set("[@metadata][result][json]", paths)
     end
     
     return [event]
