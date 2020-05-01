@@ -1,0 +1,31 @@
+###
+# Get a list of unique tests returning a single set of 
+# parameters for each unique checksum.
+# size=0 : don't return the raw hits
+# aggs.tests : bucket by test_checksum
+# aggs.tests.aggs.test_params : return a single result from each bucket limited to fields specified by _sources
+#
+# TODO: index-name should be a date range, not a * so we don;t hit all indices
+# TODO: add a query too limit initial set of tests before bucketing
+#
+###
+
+GET /pscheduler_latencybg-*/_search
+{
+    "size": 0,
+    "aggs" : {
+        "tests" : {
+            "terms" : { 
+              "field" : "pscheduler.test_checksum.keyword"
+            },
+            "aggs": {
+              "test_params": {
+                "top_hits": {
+                  "size": 1,
+                  "_source": ["test.*", "meta.*"]
+                }
+              }
+            }
+        }
+    }
+}
