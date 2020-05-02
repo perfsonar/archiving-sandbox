@@ -53,7 +53,7 @@ end
 def filter(event)
     normalized_obj = {}
     normalized_obj["test"] = event.get("test")
-    normalized_obj["schedule"] = event.get("schedule")
+    normalized_obj["observer_ip"] = event.get("[meta][observer][ip]")
     normalized_obj["tool"] = event.get("[pscheduler][tool]")
     digest = Digest::SHA256.hexdigest to_json_c14n(normalized_obj)
     event.set("[pscheduler][test_checksum]", digest)
