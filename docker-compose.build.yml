@@ -1,0 +1,8 @@
+version: '3.7'
+services:
+   elmond:         
+       image: perfsonar/elmond:latest
+       env_file: .env
+       build:
+          context: elmond
+          dockerfile: Dockerfile
