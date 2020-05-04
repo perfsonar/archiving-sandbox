@@ -1,7 +1,7 @@
 import re
 from socket import AF_INET, AF_INET6
 from summaries import DEFAULT_SUMMARIES
-from util import lookup_hostname
+from util import *
 from werkzeug.exceptions import BadRequest
 
 MAPPED_FILTERS = {
@@ -88,10 +88,6 @@ TRANSLATE_EVENT_TYPE = {
 Constants that map to common filters
 '''
 DNS_MATCH_RULE_FILTER = "dns-match-rule"
-TIME_FILTER = "time"
-TIME_START_FILTER = "time-start"
-TIME_END_FILTER = "time-end"
-TIME_RANGE_FILTER = "time-range"
 DNS_MATCH_PREFER_V6 = "prefer-v6"
 DNS_MATCH_PREFER_V4 = "prefer-v4"
 DNS_MATCH_ONLY_V6 = "only-v6"
@@ -303,13 +299,32 @@ def _build_proto(value):
     
     return filter
 
+def build_time_filter(params, time_field="pscheduler.start_time"):
+    range_dsl = { "range": { time_field: {} } }
+    time_filters = handle_time_filters(params)
+    if(time_filters["has_filters"]):
+        print("begin_ts={0}, end_ts={1}".format(time_filters['begin'], time_filters['end']))
+        begin = datetime.datetime.utcfromtimestamp(time_filters['begin'])
+        print("begin={0}".format(begin))
+        range_dsl["range"][time_field]["gte"] = begin
+        if time_filters['end'] is not None:
+            end = datetime.datetime.utcfromtimestamp(time_filters['end'])
+            print("end={0}".format(end))
+            range_dsl["range"][time_field]["lte"] = end
+        return range_dsl
+    else:
+        return None
+
 def build_filters(params):
-    #todo: handle event-type, subject-type, summary-type and summary-window
-    
     #initialize
     filters = []
     if not params:
         return filters
+    
+    #handle time filters
+    time_filter = build_time_filter(params)
+    if time_filter:
+        filters.append(time_filter)
     
     # Get dns-match-rule filter
     dns_match_rule = params.get("dns-match-rule", DNS_MATCH_V4_V6)

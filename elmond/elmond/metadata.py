@@ -9,8 +9,6 @@ class EsmondMetadata:
         self.es = es
     
     def search(self, q=None):
-        #todo: time params
-        #todo: calculate index names based on time
         #todo: sort newest to oldest
         #todo: add time-updated to events
         #todo: pagination

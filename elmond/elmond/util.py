@@ -1,10 +1,16 @@
 import datetime
 import isodate
+import time
 from socket import getaddrinfo, AF_INET, AF_INET6, SOL_TCP, SOCK_STREAM
 from summaries import INVERSE_SUMMARY_TYPES
+from werkzeug.exceptions import BadRequest
 
 #Constants
 BASE_URI="/esmond/perfsonar/archive"
+TIME_FILTER = "time"
+TIME_START_FILTER = "time-start"
+TIME_END_FILTER = "time-end"
+TIME_RANGE_FILTER = "time-range"
 
 def iso8601_to_seconds(val):
     """Convert an ISO 8601 string to a timdelta"""
@@ -42,5 +48,43 @@ def lookup_hostname(host, family):
         addr = addr_info[0][4][0]
     
     return addr
-        
+
+def valid_time(t):
+    try:
+        t = int(t)
+    except ValueError:
+        raise BadRequest("Time parameter must be an integer")
+    return t
+    
+def handle_time_filters(filters):
+        end_time = int(time.time())
+        begin_time = 0
+        has_filters = True
+        if TIME_FILTER in filters:
+            begin_time = valid_time(filters[TIME_FILTER])
+            end_time = begin_time
+        elif TIME_START_FILTER in filters and TIME_END_FILTER in filters:
+            begin_time = valid_time(filters[TIME_START_FILTER])
+            end_time = valid_time(filters[TIME_END_FILTER])
+        elif TIME_START_FILTER in filters and TIME_RANGE_FILTER in filters:
+            begin_time = valid_time(filters[TIME_START_FILTER])
+            end_time = begin_time + valid_time(filters[TIME_RANGE_FILTER])
+        elif TIME_END_FILTER in filters and TIME_RANGE_FILTER in filters:
+            end_time = valid_time(filters[TIME_END_FILTER])
+            begin_time = end_time - valid_time(filters[TIME_RANGE_FILTER])
+        elif TIME_START_FILTER in filters:
+            begin_time = valid_time(filters[TIME_START_FILTER])
+            end_time = None
+        elif TIME_END_FILTER in filters:
+            end_time = valid_time(filters[TIME_END_FILTER])
+        elif TIME_RANGE_FILTER in filters:
+            begin_time = end_time - valid_time(filters[TIME_RANGE_FILTER])
+            end_time = None
+        else:
+            has_filters = False
+        if (end_time is not None) and (end_time < begin_time):
+            raise BadRequest("Requested start time must be less than end time")
+        return {"begin": begin_time,
+                "end": end_time,
+                "has_filters": has_filters}
     
