@@ -1,5 +1,6 @@
 import dateutil.parser
 import logging
+import re
 from filters import build_filters
 from summaries import DEFAULT_SUMMARIES
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
@@ -44,8 +45,15 @@ class EsmondMetadata:
         url_parts[4] = urlencode(query)
         
         return urlunparse(url_parts)
+    
+    def _get_md_url(self, request_url, md_key):
+        url_parts = list(urlparse(request_url))
+        url_parts[2] = re.sub(r'/$', "", url_parts[2])
+        if not url_parts[2].endswith(md_key):
+            url_parts[2] = "{0}/{1}".format(url_parts[2], md_key)
+        return urlunparse(url_parts)
         
-    def search(self, q=None, request_url=None):
+    def search(self, q=None, request_url=None, paginate=False):
         #get pagination options
         result_size = DEFAULT_RESULT_LIMIT
         result_offset = 0
@@ -200,15 +208,18 @@ class EsmondMetadata:
                 print("time_added={0}".format(time_added))
             
             field_parser.parse(spec, md_obj, reference=reference, md_key=md_obj['metadata-key'], time_added=time_added)
+            if request_url:
+                md_obj['url'] = self._get_md_url(request_url, md_obj['metadata-key'])
             metadata.append(md_obj)
         
-        #add the metadata count to first element. this is how esmond did it.
+        #add the metadata count and pagination fields to first element. this is how esmond did it.
         metadata_count = res.get("aggregations", {}).get("tests_total_count",{}).get("value",0)
-        if metadata_count != 0 and len(metadata) > 0:
+        
+        if paginate and metadata_count != 0 and len(metadata) > 0:
             metadata[0]["metadata-count-total"] = metadata_count
-        if request_url:
             metadata[0]["metadata-previous-page"] = self._get_prev_link(request_url, result_size, result_offset, metadata_count)
             metadata[0]["metadata-next-page"] = self._get_next_link(request_url, result_size, result_offset, metadata_count)
+        
         return metadata
         
 class EsmondMetadataFieldParser:
@@ -231,7 +242,7 @@ class EsmondMetadataFieldParser:
                 key = "pscheduler-reference-%s" % (field)
                 val = reference[field]
                 self._parse_metadata_field(key, val, target)
-        #add event types
+        #add event types 
         target['event-types'] = []
         for et in self._get_event_types(test_spec):
             self.__add_event_type(et, target, md_key=md_key, time_added=time_added)
