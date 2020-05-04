@@ -39,6 +39,11 @@ class EsmondMetadata:
         dsl = {
             "size": 0,
             "aggs" : {
+                "tests_total_count" : {
+                  "cardinality": {
+                    "field": "pscheduler.test_checksum.keyword"
+                  }
+                },
                 "tests" : {
                     "terms" : { 
                       "field" : "pscheduler.test_checksum.keyword"
@@ -170,6 +175,11 @@ class EsmondMetadata:
             field_parser.parse(spec, md_obj, reference=reference, md_key=md_obj['metadata-key'], time_added=time_added)
             metadata.append(md_obj)
         
+        #add the metadata count to first element. this is how esmond did it.
+        metadata_count = res.get("aggregations", {}).get("tests_total_count",{}).get("value",0)
+        if metadata_count != 0 and len(metadata) > 0:
+            metadata[0]["metadata-count-total"] = metadata_count
+
         return metadata
         
 class EsmondMetadataFieldParser:
