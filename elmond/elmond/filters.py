@@ -93,8 +93,6 @@ DNS_MATCH_PREFER_V4 = "prefer-v4"
 DNS_MATCH_ONLY_V6 = "only-v6"
 DNS_MATCH_ONLY_V4 = "only-v4"
 DNS_MATCH_V4_V6 = "v4v6"
-LIMIT_FILTER = "limit"
-OFFSET_FILTER = "offset"
 RESERVED_GET_PARAMS = [
     "format", 
     LIMIT_FILTER, 

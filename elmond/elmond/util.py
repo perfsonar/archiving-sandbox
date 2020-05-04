@@ -11,6 +11,8 @@ TIME_FILTER = "time"
 TIME_START_FILTER = "time-start"
 TIME_END_FILTER = "time-end"
 TIME_RANGE_FILTER = "time-range"
+LIMIT_FILTER = "limit"
+OFFSET_FILTER = "offset"
 
 def iso8601_to_seconds(val):
     """Convert an ISO 8601 string to a timdelta"""

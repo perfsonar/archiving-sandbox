@@ -2,9 +2,10 @@ import dateutil.parser
 import logging
 from filters import build_filters
 from summaries import DEFAULT_SUMMARIES
-from util import iso8601_to_seconds, build_uri
+from util import *
 
 DEFAULT_RESULT_LIMIT=1000
+MAX_RESULT_LIMIT=10000
 
 class EsmondMetadata:
 
@@ -18,17 +19,29 @@ class EsmondMetadata:
         #todo: logging conf file
         #todo: unit tests
         
+        #get pagination options
+        result_size = DEFAULT_RESULT_LIMIT
+        result_offset = 0
+        if q.get(LIMIT_FILTER, None):
+            try:
+                result_size = int(q[LIMIT_FILTER])
+            except ValueError:
+                raise BadRequest("{0} parameter must be an integer".format(LIMIT_FILTER))
+        if q.get(OFFSET_FILTER, None):
+            try:
+                result_offset = int(q[OFFSET_FILTER])
+            except ValueError:
+                raise BadRequest("{0} parameter must be an integer".format(OFFSET_FILTER))
+        if result_size > MAX_RESULT_LIMIT:
+            raise BadRequest("{0} parameter cannot exceed {1}".format(LIMIT_FILTER, MAX_RESULT_LIMIT))
+
         #base search
         dsl = {
             "size": 0,
             "aggs" : {
                 "tests" : {
                     "terms" : { 
-                      "field" : "pscheduler.test_checksum.keyword",
-                      "size": DEFAULT_RESULT_LIMIT,
-                      "order": {
-                        "latest_test": "desc"
-                      }
+                      "field" : "pscheduler.test_checksum.keyword"
                     },
                     "aggs": {
                       "test_params": {
@@ -41,6 +54,15 @@ class EsmondMetadata:
                       "latest_test": {
                         "max": {
                           "field":"pscheduler.start_time"
+                        }
+                      },
+                      "sorted_test": {
+                        "bucket_sort": {
+                          "sort": [
+                            {"latest_test": {"order": "desc"}}
+                          ],
+                          "size": result_size,
+                          "from": result_offset
                         }
                       }
                     }
