@@ -2,12 +2,15 @@ import dateutil.parser
 import logging
 import re
 from filters import build_filters
+from flask import current_app as app
 from summaries import DEFAULT_SUMMARIES
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from util import *
 
 DEFAULT_RESULT_LIMIT=1000
 MAX_RESULT_LIMIT=10000
+
+log = logging.getLogger('elmond')
 
 class EsmondMetadata:
 
@@ -270,10 +273,15 @@ class EsmondMetadataFieldParser:
             
         if time_added:
             et['time-updated'] = time_added
-            
-        if event_type in DEFAULT_SUMMARIES:
+        
+        #Load summaries from config
+        et_summary_map = app.config.get('ELMOND', {}).get('SUMMARIES', None)
+        if not et_summary_map:
+            et_summary_map = DEFAULT_SUMMARIES
+        #Map summaries to event type
+        if event_type in et_summary_map:
             et["summaries"] = []
-            for summary in DEFAULT_SUMMARIES[event_type]:
+            for summary in et_summary_map[event_type]:
                 summ_obj = {
                     "event-type":   summary["event-type"],
                     "summary-window":   summary["summary-window"],

@@ -36,7 +36,9 @@ services:
          - "5601:5601"
   elmond:
     image: perfsonar/elmond:latest
+    env_file: .env
     volumes:
        - ./elmond/elmond:/app
+       - ./elmond/conf:/etc/elmond
     ports:
       - "5000:5000"

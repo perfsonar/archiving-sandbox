@@ -1,9 +1,12 @@
+import logging
 import datetime
 import isodate
 import time
 from socket import getaddrinfo, AF_INET, AF_INET6, SOL_TCP, SOCK_STREAM
 from summaries import INVERSE_SUMMARY_TYPES
 from werkzeug.exceptions import BadRequest
+
+log = logging.getLogger('elmond')
 
 #Constants
 BASE_URI="/esmond/perfsonar/archive"

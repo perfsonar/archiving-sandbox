@@ -1,0 +1,22 @@
+{
+    "ELASTIC_HOSTS": [ "elasticsearch" ],
+    "#ELASTIC_PARAMS": {
+        "use_ssl": true
+    },
+    "#SUMMARIES": {
+        "throughput": [
+            {
+                "summary-window":   1800,
+                "event-type":   "throughput",
+                "summary-type":   "average"
+            }
+        ],
+        "packet-loss-rate": [
+            {
+                "summary-window":   1800,
+                "event-type":   "packet-loss-rate",
+                "summary-type":   "aggregation"
+            }
+        ]
+    }
+}
