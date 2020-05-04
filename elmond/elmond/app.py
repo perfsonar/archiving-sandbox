@@ -1,7 +1,7 @@
 import logging
 from json import dumps
 from elasticsearch import Elasticsearch
-from flask import Flask, Response
+from flask import Flask, Response, request
 from metadata import EsmondMetadata
 
 app = Flask(__name__)
@@ -23,8 +23,8 @@ def json_response(obj):
             
 @app.route('/', methods=['GET'])
 def get_metadata():
-    q = EsmondMetadata(es)
-    metadata = q.search()
+    emd = EsmondMetadata(es)
+    metadata = emd.search(q=request.args)
     return json_response(metadata)
 
 if __name__ == '__main__':
