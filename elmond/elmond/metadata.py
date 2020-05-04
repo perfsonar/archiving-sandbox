@@ -266,7 +266,7 @@ class EsmondMetadataFieldParser:
     def __add_event_type(self, event_type, target, md_key=None, time_added=None):
         et = { "event-type": event_type }
         if md_key:
-            et['uri'] = build_uri(md_key, event_type)
+            et['base-uri'] = build_uri(md_key, event_type)
             
         if time_added:
             et['time-updated'] = time_added
