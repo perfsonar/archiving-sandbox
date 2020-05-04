@@ -4,7 +4,7 @@ FROM centos:centos8
 RUN \
     dnf update -y && \
     dnf install -y epel-release && \
-    dnf install -y python3 python3-flask python3-elasticsearch python3-isodate
+    dnf install -y python3 python3-flask python3-elasticsearch python3-isodate python3-dateutil
 
 #shared volume
 VOLUME /app

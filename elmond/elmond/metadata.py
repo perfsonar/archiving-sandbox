@@ -1,7 +1,10 @@
+import dateutil.parser
 import logging
 from filters import build_filters
 from summaries import DEFAULT_SUMMARIES
 from util import iso8601_to_seconds, build_uri
+
+DEFAULT_RESULT_LIMIT=1000
 
 class EsmondMetadata:
 
@@ -9,8 +12,6 @@ class EsmondMetadata:
         self.es = es
     
     def search(self, q=None):
-        #todo: sort newest to oldest
-        #todo: add time-updated to events
         #todo: pagination
         #todo: better errorhandling?
         #todo: conf file
@@ -23,13 +24,23 @@ class EsmondMetadata:
             "aggs" : {
                 "tests" : {
                     "terms" : { 
-                      "field" : "pscheduler.test_checksum.keyword"
+                      "field" : "pscheduler.test_checksum.keyword",
+                      "size": DEFAULT_RESULT_LIMIT,
+                      "order": {
+                        "latest_test": "desc"
+                      }
                     },
                     "aggs": {
                       "test_params": {
                         "top_hits": {
                           "size": 1,
+                          "sort": [ { "pscheduler.start_time": { "order": "desc" } } ],
                           "_source": ["test.*", "meta.*", "pscheduler.*", "reference.*"]
+                        }
+                      },
+                      "latest_test": {
+                        "max": {
+                          "field":"pscheduler.start_time"
                         }
                       }
                     }
@@ -130,8 +141,11 @@ class EsmondMetadata:
             else:
                 field_parser = EsmondRawMetadataFieldParser(test_type)
                 
+            if pscheduler.get("added", None):
+                time_added = int(dateutil.parser.parse(pscheduler['added']).timestamp())
+                print("time_added={0}".format(time_added))
             
-            field_parser.parse(spec, md_obj, reference=reference, md_key=md_obj['metadata-key'])
+            field_parser.parse(spec, md_obj, reference=reference, md_key=md_obj['metadata-key'], time_added=time_added)
             metadata.append(md_obj)
         
         return metadata
@@ -139,7 +153,7 @@ class EsmondMetadata:
 class EsmondMetadataFieldParser:
     field_map={}
     
-    def parse(self, test_spec, target, reference=None, md_key=None):
+    def parse(self, test_spec, target, reference=None, md_key=None, time_added=None):
         #map fields
         for field in self.field_map:
             if field in test_spec:
@@ -159,9 +173,10 @@ class EsmondMetadataFieldParser:
         #add event types
         target['event-types'] = []
         for et in self._get_event_types(test_spec):
-            self.__add_event_type(et, target, md_key=md_key)
-        self.__add_event_type('pscheduler-run-href', target)
-
+            self.__add_event_type(et, target, md_key=md_key, time_added=time_added)
+        self.__add_event_type('pscheduler-run-href', target, md_key=md_key, time_added=time_added)
+        self.__add_event_type('pscheduler-raw', target, md_key=md_key, time_added=time_added)
+        
     def _parse_metadata_field(self, key, val, target):
         if type(val) is list:
             for (i, v) in enumerate(val):
@@ -176,11 +191,14 @@ class EsmondMetadataFieldParser:
         else:
             target[key] = val
      
-    def __add_event_type(self, event_type, target, md_key=None):
+    def __add_event_type(self, event_type, target, md_key=None, time_added=None):
         et = { "event-type": event_type }
         if md_key:
             et['uri'] = build_uri(md_key, event_type)
-        
+            
+        if time_added:
+            et['time-updated'] = time_added
+            
         if event_type in DEFAULT_SUMMARIES:
             et["summaries"] = []
             for summary in DEFAULT_SUMMARIES[event_type]:
@@ -341,12 +359,6 @@ class EsmondRawMetadataFieldParser(EsmondMetadataFieldParser):
             key = "pscheduler-%s-%s" % (self.test_type, field)
             val = test_spec[field]
             self._parse_metadata_field(key, val, target)
-    
-    def _get_event_types(self, test_spec):
-        event_types = [
-            'pscheduler-raw'
-        ]
-        return event_types
 
 class EsmondDiskToDiskMetadataFieldParser(EsmondRawMetadataFieldParser):
     field_map = {
