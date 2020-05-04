@@ -24,7 +24,7 @@ def json_response(obj):
 @app.route('/', methods=['GET'])
 def get_metadata():
     emd = EsmondMetadata(es)
-    metadata = emd.search(q=request.args)
+    metadata = emd.search(q=request.args, request_url=request.url)
     return json_response(metadata)
 
 if __name__ == '__main__':

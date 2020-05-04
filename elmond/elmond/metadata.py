@@ -2,6 +2,7 @@ import dateutil.parser
 import logging
 from filters import build_filters
 from summaries import DEFAULT_SUMMARIES
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from util import *
 
 DEFAULT_RESULT_LIMIT=1000
@@ -12,13 +13,39 @@ class EsmondMetadata:
     def __init__(self, es):
         self.es = es
     
-    def search(self, q=None):
-        #todo: pagination
-        #todo: better errorhandling?
-        #todo: conf file
-        #todo: logging conf file
-        #todo: unit tests
+    def _get_next_link(self, request_url, result_size, result_offset, metadata_count):
+        if (result_size + result_offset) >= metadata_count:
+            return None
+        new_offset = result_size + result_offset
+        new_limit = result_size
+        if (new_offset + new_limit) > metadata_count and new_offset < metadata_count:
+            #if someone specifies an offset too big just ignore it
+            new_limit =   metadata_count - new_offset
+             
+        url_parts = list(urlparse(request_url))
+        query = dict(parse_qsl(url_parts[4]))
+        query.update({ "limit": new_limit, "offset": new_offset})
+        url_parts[4] = urlencode(query)
         
+        return urlunparse(url_parts)
+    
+    def _get_prev_link(self, request_url, result_size, result_offset, metadata_count):
+        if result_offset == 0:
+            return None
+        new_offset = result_offset - result_size
+        new_limit = result_size
+        if result_size > result_offset:
+            new_offset = 0
+            new_limit = result_offset
+             
+        url_parts = list(urlparse(request_url))
+        query = dict(parse_qsl(url_parts[4]))
+        query.update({ "limit": new_limit, "offset": new_offset})
+        url_parts[4] = urlencode(query)
+        
+        return urlunparse(url_parts)
+        
+    def search(self, q=None, request_url=None):
         #get pagination options
         result_size = DEFAULT_RESULT_LIMIT
         result_offset = 0
@@ -179,7 +206,9 @@ class EsmondMetadata:
         metadata_count = res.get("aggregations", {}).get("tests_total_count",{}).get("value",0)
         if metadata_count != 0 and len(metadata) > 0:
             metadata[0]["metadata-count-total"] = metadata_count
-
+        if request_url:
+            metadata[0]["metadata-previous-page"] = self._get_prev_link(request_url, result_size, result_offset, metadata_count)
+            metadata[0]["metadata-next-page"] = self._get_next_link(request_url, result_size, result_offset, metadata_count)
         return metadata
         
 class EsmondMetadataFieldParser:
