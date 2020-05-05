@@ -95,8 +95,20 @@ def _extract_result_stats(key, result):
         "standard-deviation": field.get("stddev", None),
         "variance": field.get("variance", None)
     }
+
+def _extract_result_subinterval(key, interval_obj):
+    start = interval_obj.get("start", None)
+    end = interval_obj.get("end", None)
+    if start is None or end is None:
+        return None
+    duration = end - start
+    val = _extract_result_field(key, interval_obj)
+    if val is None:
+        return None
     
-def _extract_result_subintervals(key, result, event_type):
+    return { "start": start, "duration": duration, "val": val }
+    
+def _extract_result_subintervals(key, result, event_type, streams=False):
     #extract interval field
     intervals = _extract_result_field(key, result)
     if intervals is None:
@@ -114,18 +126,30 @@ def _extract_result_subintervals(key, result, event_type):
         interval_key = re.sub("_", "-", interval_key)
     
     esmond_intervals = []
+    stream_intervals = {}
     for interval in intervals:
-        if interval.get("summary", None):
-            start = interval["summary"].get("start", None)
-            end = interval["summary"].get("end", None)
-            if start is None or end is None:
-                continue
-            duration = end - start
-            val = _extract_result_field(interval_key, interval["summary"])
-            if val is None:
-                continue
-            esmond_intervals.append({ "start": start, "duration": duration, "val": val})
+        if not streams and interval.get("summary", None):
+            esmond_interval = _extract_result_subinterval(interval_key, interval["summary"])
+            if esmond_interval:
+                esmond_intervals.append(esmond_interval)
+        elif streams and interval.get("streams", None):
+            #organize interval info by stream
+            for stream in interval["streams"]:
+                stream_id = stream['stream-id']
+                if not stream_id:
+                    continue
+                esmond_si = _extract_result_subinterval(interval_key, stream)
+                if not esmond_si:
+                    continue
+                if stream_id not in stream_intervals:
+                    stream_intervals[stream_id] = []
+                stream_intervals[stream_id].append(esmond_si)
 
+    #if streams now make a sorted array of arrays
+    if streams:
+        for id in sorted(stream_intervals):
+            esmond_intervals.append(stream_intervals[id])
+    
     return esmond_intervals
 
 class EsmondData:
@@ -229,7 +253,7 @@ class EsmondData:
                     continue
                 datum["val"] = _build_esmond_histogram(hist)
             elif event_type.startswith("streams") and event_type.endswith("subintervals"):
-                pass
+                datum["val"] = _extract_result_subintervals(DATA_FIELD_MAP[dfm_key], result, event_type, streams=True)
             elif event_type.startswith("streams"):
                 pass
             elif event_type.endswith("subintervals"):
