@@ -11,6 +11,7 @@ SUPPORTED_SUMMARIES = {
     "statistics": True
 }
 DATA_FIELD_MAP = {
+    "failures/base": "result.error",
     "histogram-owdelay/base": "result.latency.histogram",
     "histogram-owdelay/statistics": "result.latency",
     "histogram-ttl/base": "result.ttl.histogram",
@@ -210,6 +211,9 @@ class EsmondData:
         if result_size > MAX_RESULT_LIMIT:
             raise BadRequest("{0} parameter cannot exceed {1}".format(LIMIT_FILTER, MAX_RESULT_LIMIT))
 
+        #optimization: filter based on whether we want succeeded or not
+        succeeded_filter_val = (event_type != 'failures')
+
         #data query
         dsl = {
             "size": result_size,
@@ -228,6 +232,11 @@ class EsmondData:
                   {
                     "term": {
                       "pscheduler.test_checksum": metadata_key
+                    }
+                  },
+                  {
+                    "term": {
+                      "result.succeeded": succeeded_filter_val
                     }
                   }
                 ]
@@ -284,6 +293,11 @@ class EsmondData:
                 datum["val"] = _extract_result_streams(DATA_FIELD_MAP[dfm_key], result, event_type)
             elif event_type.endswith("subintervals"):
                 datum["val"] = _extract_result_subintervals(DATA_FIELD_MAP[dfm_key], result, event_type)
+            elif event_type == 'failures':
+                err_msg =  _extract_result_field(DATA_FIELD_MAP[dfm_key], result)
+                if err_msg is None:
+                    continue
+                datum["val"] = { "error": err_msg }
             else:
                 #extract from the map
                 datum["val"] = _extract_result_field(DATA_FIELD_MAP[dfm_key], result)
