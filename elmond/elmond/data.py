@@ -10,21 +10,35 @@ SUPPORTED_SUMMARIES = {
     "statistics": True
 }
 DATA_FIELD_MAP = {
-    "throughput/base": "result.throughput_bits",
     "histogram-owdelay/base": "result.latency.histogram",
-    "histogram-owdelay/statistics": [
-        "result.latency.max",
-        "result.latency.mean",
-        "result.latency.median",
-        "result.latency.min",
-        "result.latency.mode",
-        "result.latency.p_25",
-        "result.latency.p_75",
-        "result.latency.p_95",
-        "result.latency.stddev",
-        "result.latency.variance"
-    ]
+    "histogram-owdelay/statistics": "result.latency",
+    "histogram-ttl/base": "result.ttl.histogram",
+    "histogram-ttl/statistics": "result.ttl",
+    "histogram-rtt/base": "result.rtt.histogram",
+    "histogram-rtt/statistics": "result.rtt",
+    "packet-count-lost/base": "result.packets.lost",
+    "packet-count-lost-bidir/base": "result.packets.lost",
+    "packet-count-sent/base": "result.packets.sent",
+    "packet-duplicates/base": "result.packets.duplicated",
+    "packet-duplicates-bidir/base": "result.packets.duplicated",
+    "packet-loss-rate/base": "result.packets.loss",
+    "packet-loss-rate-bidir/base": "result.packets.loss",
+    "packet-reorders/base": "result.packets.reordered",
+    "packet-reorders-bidir/base": "result.packets.reordered",
+    "packet-retransmits/base": "result.retransmits",
+    "packet-retransmits-subintervals/base": "result.intervals.json",
+    "packet-trace/base": "result.json",
+    "packet-trace-multi/base": "result.json",
+    "path-mtu/base": "result.mtu",
+    "streams-packet-retransmits/base": "result.intervals.json",
+    "streams-packet-retransmits-subintervals/base": "result.intervals.json",
+    "streams-throughput/base": "result.intervals.json",
+    "streams-throughput-subintervals/base": "result.intervals.json",
+    "throughput/base": "result.throughput_bits",
+    "throughput-subintervals/base": "result.intervals.json",
+    "time-error-estimates/base": "result.max_clock_error"
 }
+
 log = logging.getLogger('elmond')
 
 def _build_esmond_histogram(elastic_histo):
@@ -44,6 +58,44 @@ def _build_esmond_histogram(elastic_histo):
     
     return esmond_histo
 
+def _extract_result_field(key, result):
+    key_parts = key.split('.')
+    #pop off result at beginning
+    key_parts.pop(0)
+    curr_field = result
+    for key_part in key_parts:
+        #pull out the field
+        try:
+            curr_field = curr_field.get(key_part, None)
+        except:
+            #handle error because of unexpected object structure
+            log.error("Error while extracting field {0}.".format(key_part))
+            return None
+        #if didn't find field, then return None
+        if curr_field is None:
+            return None
+    
+    return curr_field
+
+def _extract_result_stats(key, result):
+    field = _extract_result_field(key, result)
+    if field is None:
+        return None
+    
+    return {
+        "maximum": field.get("max", None),
+        "mean": field.get("mean", None),
+        "median": field.get("median", None),
+        "minimum": field.get("min", None),
+        "mode": field.get("mode", None),
+        "percentile-25": field.get("p_25", None),
+        "percentile-75": field.get("p_75", None),
+        "percentile-95": field.get("p_95", None),
+        "standard-deviation": field.get("stddev", None),
+        "variance": field.get("variance", None)
+    }
+    
+    
 class EsmondData:
 
     def __init__(self, es):
@@ -108,13 +160,17 @@ class EsmondData:
         
         #limit fields returned
         dfm_key = "{0}/{1}".format(event_type, summary_type)
+        raw_type = True
         if dfm_key in DATA_FIELD_MAP:
+            raw_type = False
             if isinstance(DATA_FIELD_MAP[dfm_key], list):
                 dsl["_source"].extend(DATA_FIELD_MAP[dfm_key])
             else:
                 dsl["_source"].append(DATA_FIELD_MAP[dfm_key])
-        else:
+        elif event_type == "pscheduler-raw":
             dsl["_source"].append("result.*")
+        else:
+            raise BadRequest("Unrecognized event type {0}".format(event_type))
         
         #exec query
         res = self.es.search(index="pscheduler_*", body=dsl)
@@ -131,36 +187,30 @@ class EsmondData:
             datum = { "ts": datestr_to_timestamp(ts) }
             #get value - event type specific. 
             # Note: right now it either spits out an empty string or just gives raw results for unsupported event types
-            if event_type == "throughput":
-                if "throughput_bits" in result:
-                    datum["val"] = result["throughput_bits"]
-                else:
-                    continue
-            elif event_type == "histogram-owdelay" and summary_type == "statistics":
-                if "latency" in result:
-                    datum["val"] = {
-                        "maximum": result["latency"].get("max", None),
-                        "mean": result["latency"].get("mean", None),
-                        "median": result["latency"].get("median", None),
-                        "minimum": result["latency"].get("min", None),
-                        "mode": result["latency"].get("mode", None),
-                        "percentile-25": result["latency"].get("p_25", None),
-                        "percentile-75": result["latency"].get("p_75", None),
-                        "percentile-95": result["latency"].get("p_95", None),
-                        "standard-deviation": result["latency"].get("stddev", None),
-                        "variance": result["latency"].get("variance", None)
-                    }
-                else:
-                    continue
-            elif event_type == "histogram-owdelay":
-                if "latency" in result and "histogram" in result["latency"]:
-                    datum["val"] = _build_esmond_histogram(result["latency"]["histogram"])
-                    if datum["val"] is None:
-                        continue
-                else:
-                    continue
-            else:
+            if raw_type:
                 datum["val"] = result
+            elif event_type.startswith("histogram-") and summary_type == "statistics":
+                datum["val"] = _extract_result_stats(DATA_FIELD_MAP[dfm_key], result)
+            elif event_type.startswith("histogram-"):
+                hist = _extract_result_field(DATA_FIELD_MAP[dfm_key], result)
+                if not hist:
+                    continue
+                datum["val"] = _build_esmond_histogram(hist)
+            elif event_type.startswith("streams") and event_type.startswith("subintervals"):
+                pass
+            elif event_type.startswith("streams"):
+                pass
+            elif event_type.startswith("subintervals"):
+                pass
+            else:
+                #extract from the map
+                datum["val"] = _extract_result_field(DATA_FIELD_MAP[dfm_key], result)
+            
+            #if we didn't find anything continue - esmond never has a null point (i think)
+            if datum["val"] is None:
+                continue
+            
+            #add to list of data
             data.append(datum)    
 
         return data
