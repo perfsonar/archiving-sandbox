@@ -31,9 +31,9 @@ DATA_FIELD_MAP = {
     "packet-trace/base": "result.json",
     "packet-trace-multi/base": "result.json",
     "path-mtu/base": "result.mtu",
-    "streams-packet-retransmits/base": "result.intervals.json",
+    "streams-packet-retransmits/base": "result.streams.json",
     "streams-packet-retransmits-subintervals/base": "result.intervals.json",
-    "streams-throughput/base": "result.intervals.json",
+    "streams-throughput/base": "result.streams.json",
     "streams-throughput-subintervals/base": "result.intervals.json",
     "throughput/base": "result.throughput_bits",
     "throughput-subintervals/base": "result.intervals.json",
@@ -59,6 +59,19 @@ def _build_esmond_histogram(elastic_histo):
     
     return esmond_histo
 
+def _parse_compound_key(event_type):
+    #Extract the field we want from streams, intervals and stream intervals
+    event_type = re.sub(r'^streams-', "", event_type)
+    event_type = re.sub(r'-subintervals$', "", event_type)
+    key = DATA_FIELD_MAP.get("{0}/base".format(event_type), None)
+    if key is None:
+        return None
+    else:
+        #kinda a hack, but works
+        key = re.sub("_", "-", key)
+    
+    return key
+        
 def _extract_result_field(key, result):
     key_parts = key.split('.')
     #pop off result at beginning
@@ -115,15 +128,9 @@ def _extract_result_subintervals(key, result, event_type, streams=False):
         return None
     #figure out which key we are looking for by taking advantage of structure of
     # subinterval event type name
-    interval_event_type = event_type
-    interval_event_type = re.sub(r'^streams-', "", interval_event_type)
-    interval_event_type = re.sub(r'-subintervals$', "", interval_event_type)
-    interval_key = DATA_FIELD_MAP.get("{0}/base".format(interval_event_type), None)
+    interval_key = _parse_compound_key(event_type)
     if interval_key is None:
         return None
-    else:
-        #kinda a hack, but works
-        interval_key = re.sub("_", "-", interval_key)
     
     esmond_intervals = []
     stream_intervals = {}
@@ -151,6 +158,25 @@ def _extract_result_subintervals(key, result, event_type, streams=False):
             esmond_intervals.append(stream_intervals[id])
     
     return esmond_intervals
+
+def _extract_result_streams(key, result, event_type):
+    #extract streams field
+    streams = _extract_result_field(key, result)
+    if streams is None:
+        return None
+    #figure out field we want in the stream
+    stream_key = _parse_compound_key(event_type)
+    log.debug("stream_key={0}".format(stream_key))
+    if stream_key is None:
+        return None
+    #parse streams
+    vals = []
+    log.debug("streams={0}".format(streams))
+    for stream in streams:
+        vals.append(_extract_result_field(stream_key, stream))
+
+    return vals
+    
 
 class EsmondData:
 
@@ -255,7 +281,7 @@ class EsmondData:
             elif event_type.startswith("streams") and event_type.endswith("subintervals"):
                 datum["val"] = _extract_result_subintervals(DATA_FIELD_MAP[dfm_key], result, event_type, streams=True)
             elif event_type.startswith("streams"):
-                pass
+                datum["val"] = _extract_result_streams(DATA_FIELD_MAP[dfm_key], result, event_type)
             elif event_type.endswith("subintervals"):
                 datum["val"] = _extract_result_subintervals(DATA_FIELD_MAP[dfm_key], result, event_type)
             else:
