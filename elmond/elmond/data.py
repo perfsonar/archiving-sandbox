@@ -1,6 +1,7 @@
 from util import *
 from werkzeug.exceptions import BadRequest, NotImplemented
 from filters import build_time_filter
+import re
 
 DEFAULT_RESULT_LIMIT=1000
 MAX_RESULT_LIMIT=10000
@@ -95,7 +96,38 @@ def _extract_result_stats(key, result):
         "variance": field.get("variance", None)
     }
     
+def _extract_result_subintervals(key, result, event_type):
+    #extract interval field
+    intervals = _extract_result_field(key, result)
+    if intervals is None:
+        return None
+    #figure out which key we are looking for by taking advantage of structure of
+    # subinterval event type name
+    interval_event_type = event_type
+    interval_event_type = re.sub(r'^streams-', "", interval_event_type)
+    interval_event_type = re.sub(r'-subintervals$', "", interval_event_type)
+    interval_key = DATA_FIELD_MAP.get("{0}/base".format(interval_event_type), None)
+    if interval_key is None:
+        return None
+    else:
+        #kinda a hack, but works
+        interval_key = re.sub("_", "-", interval_key)
     
+    esmond_intervals = []
+    for interval in intervals:
+        if interval.get("summary", None):
+            start = interval["summary"].get("start", None)
+            end = interval["summary"].get("end", None)
+            if start is None or end is None:
+                continue
+            duration = end - start
+            val = _extract_result_field(interval_key, interval["summary"])
+            if val is None:
+                continue
+            esmond_intervals.append({ "start": start, "duration": duration, "val": val})
+
+    return esmond_intervals
+
 class EsmondData:
 
     def __init__(self, es):
@@ -196,12 +228,12 @@ class EsmondData:
                 if not hist:
                     continue
                 datum["val"] = _build_esmond_histogram(hist)
-            elif event_type.startswith("streams") and event_type.startswith("subintervals"):
+            elif event_type.startswith("streams") and event_type.endswith("subintervals"):
                 pass
             elif event_type.startswith("streams"):
                 pass
-            elif event_type.startswith("subintervals"):
-                pass
+            elif event_type.endswith("subintervals"):
+                datum["val"] = _extract_result_subintervals(DATA_FIELD_MAP[dfm_key], result, event_type)
             else:
                 #extract from the map
                 datum["val"] = _extract_result_field(DATA_FIELD_MAP[dfm_key], result)
