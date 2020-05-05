@@ -3,6 +3,7 @@ import datetime
 import dateutil.parser
 import isodate
 import time
+from flask import current_app as app
 from socket import getaddrinfo, AF_INET, AF_INET6, SOL_TCP, SOCK_STREAM
 from summaries import INVERSE_SUMMARY_TYPES
 from werkzeug.exceptions import BadRequest
@@ -10,7 +11,6 @@ from werkzeug.exceptions import BadRequest
 log = logging.getLogger('elmond')
 
 #Constants
-BASE_URI="/esmond/perfsonar/archive"
 TIME_FILTER = "time"
 TIME_START_FILTER = "time-start"
 TIME_END_FILTER = "time-end"
@@ -34,12 +34,13 @@ def datestr_to_timestamp(datestr):
     return int(dateutil.parser.parse(datestr).timestamp())
     
 def build_uri(md_key, event_type=None, summary_type='base', summary_window=0):
+    base_uri = app.config.get('ELMOND', {}).get("PROXY_PATH", "")
     if event_type:
         if summary_type in INVERSE_SUMMARY_TYPES:
             summary_type = INVERSE_SUMMARY_TYPES[summary_type]
-        uri = "{0}/{1}/{2}/{3}/{4}".format(BASE_URI, md_key, event_type, summary_type, summary_window)
+        uri = "{0}/{1}/{2}/{3}/{4}".format(base_uri, md_key, event_type, summary_type, summary_window)
     else:
-        uri = "{0}/{1}".format(BASE_URI, md_key)
+        uri = "{0}/{1}".format(base_uri, md_key)
     
     return uri
 

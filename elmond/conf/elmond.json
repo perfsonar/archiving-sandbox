@@ -3,6 +3,7 @@
     "#ELASTIC_PARAMS": {
         "use_ssl": true
     },
+    "#PROXY_PATH": "/esmond/perfsonar/archive",
     "#SUMMARIES": {
         "throughput": [
             {
