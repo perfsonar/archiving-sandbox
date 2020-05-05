@@ -9,6 +9,7 @@ This is a repository to test out new types of archiving. **It is for development
  - Read the RabbitMQ queue with Logstash and apply a set of filters
  - Write the result to ElasticSearch
  - Browse the ElasticSearch data with Kibana
+ - Query ElasticSearch using the Esmond API
  
 ## Quickstart
 
@@ -25,21 +26,24 @@ cd archiving-sandbox
 4. Copy `env.example` to `.env`. In general you don't need to change this file and just contains some advanced options.
 ```
 cp env.example .env
-
 ```
-5. Bring up the docker containers (this may take a minute, you can follow along with `docker-compose logs -f`):
+5. Build the *elmond* container (the Esmond to ElasticSearch backward compatibility layer):
+```
+docker-compose -f docker-compose.build.yml build
+```
+6. Bring up the docker containers (this may take a minute, you can follow along with `docker-compose logs -f`):
 ```
 docker-compose up -d
 ```
-6. Login to the *testpoint* container:
+7. Login to the *testpoint* container:
 ```
 docker-compose exec testpoint bash
 ```
-7. Run a pscheduler test. Below is a throughput test run between the *testpoint* and *target* containers. You can run exactly as shown:
+8. Run a pscheduler test. Below is a throughput test run between the *testpoint* and *target* containers. You can run exactly as shown:
 ```
 pscheduler task throughput --source testpoint --dest target
 ```
-8. When the test completes, navigate you browser to Kibana at http://localhost:5601. You can click **Discover** and follow the prompts to browse your data.
+9. When the test completes, navigate you browser to Kibana at http://localhost:5601. You can click **Discover** and follow the prompts to browse your data.
 
 ## Containers
 
@@ -58,6 +62,9 @@ The docker-compose file creates the following containers:
 - **elasticsearch** - The ElasticSearch instance where the results from *logstash* are stored.
 
 - **kibana** - A Kibana container you can use to browse ElasticSearch. You can access the Kibana interface at http://localhost:5601.
+
+- **elmond** - A container that allows you to query ElasticSearch with the Esmond API. You can access the Esmond API at http://localhost:5000.
+
 
 ## Using the containers
 
@@ -100,7 +107,7 @@ docker-compose exec testpoint bash
 
 - In general you should use `-v` with `docker-compose down` to delete any "anonymous" volumes. These are volumes docker-compose creates that save the state of the container beyond the shared volumes we have defined. This is great if you want to keep the elastic data around, but it causes problems for `httpd` in the perfsonar containers in particular. If you don't use `-v` and one or both of the perfSONAR containers complain about not being able to find pscheduler, simply run the command `httpd` at the command-line (no `systemctl` in docker-land, so literally just type `httpd` at the command-line). 
 
-- If you run a pscheduler test and it doesn't arrive in RabbitMQ check `/var/log/pscheduler.log` for a message like `archiver WARNING  Ignoring /etc/pscheduler/default-archives/rabbit.json: No archiver "rabbitmq" is avaiable.`. If this happens run your command with like `pscheduler task --archive /etc/pscheduler/default-archives/rabbit.json ...`. Need to investigate closer why this is happening. 
+- If you run a pscheduler test and it doesn't arrive in RabbitMQ check `/var/log/pscheduler.log` for a message like `archiver WARNING  Ignoring /etc/pscheduler/default-archives/rabbit.json: No archiver "rabbitmq" is avaiable.`. If this happens run your command with like `pscheduler task --archive /etc/pscheduler/default-archives/rabbit.json ...`. Alternatively, restarting just the testpoint usually fixes the issue: `docker-compose restart testpoint`. Need to investigate closer why this is happening. 
 
 - If you need to run ruby in the logstash container to test a filter, run the following:
 ```
