@@ -1,5 +1,6 @@
 import logging
 import datetime
+import dateutil.parser
 import isodate
 import time
 from socket import getaddrinfo, AF_INET, AF_INET6, SOL_TCP, SOCK_STREAM
@@ -29,6 +30,9 @@ def iso8601_to_seconds(val):
     
     return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10.0**6) / 10.0**6
 
+def datestr_to_timestamp(datestr):
+    return int(dateutil.parser.parse(datestr).timestamp())
+    
 def build_uri(md_key, event_type=None, summary_type='base', summary_window=0):
     if event_type:
         if summary_type in INVERSE_SUMMARY_TYPES:

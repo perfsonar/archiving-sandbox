@@ -3,6 +3,7 @@ import logging.config
 import json
 import os
 import sys
+from data import EsmondData
 from elasticsearch import Elasticsearch
 from flask import Flask, Response, request, g
 from metadata import EsmondMetadata
@@ -66,6 +67,13 @@ def create_app(test_config=None):
             raise NotFound("Unable to find metadata with key {0}".format(metadata_key))
             
         return json_response(metadata[0])
+        
+    @app.route('/<metadata_key>/<event_type>/<summary_type>/<summary_window>', methods=['GET'])
+    def get_data(metadata_key, event_type, summary_type, summary_window):
+        esd = EsmondData(es)
+        data = esd.fetch(metadata_key, event_type, summary_type, summary_window, q=request.args)
+        
+        return json_response(data)
     
     return app
     

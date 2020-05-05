@@ -1,4 +1,3 @@
-import dateutil.parser
 import logging
 import re
 from filters import build_filters
@@ -207,7 +206,7 @@ class EsmondMetadata:
                 field_parser = EsmondRawMetadataFieldParser(test_type)
                 
             if pscheduler.get("added", None):
-                time_added = int(dateutil.parser.parse(pscheduler['added']).timestamp())
+                time_added = datestr_to_timestamp(pscheduler['added'])
                 print("time_added={0}".format(time_added))
             
             field_parser.parse(spec, md_obj, reference=reference, md_key=md_obj['metadata-key'], time_added=time_added)
