@@ -19,11 +19,20 @@ services:
        ports:
          - "9200:9200"
          - "9300:9300"
+
+  ps_elastic_setup:
+    image: perfsonar/ps_elastic_setup:latest
+    env_file: .env
+    depends_on: 
+     - elasticsearch
+    volumes:
+       - ./ps_elastic_setup:/app
+
   logstash:
        image: logstash:7.6.2
        env_file: .env
        depends_on: 
-        - elasticsearch
+        - ps_elastic_setup
        ports:
          - "5044:5044"
          - "9600:9600"

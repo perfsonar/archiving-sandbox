@@ -6,3 +6,9 @@ services:
        build:
           context: elmond
           dockerfile: Dockerfile
+   ps_elastic_setup:         
+       image: perfsonar/ps_elastic_setup:latest
+       env_file: .env
+       build:
+          context: ps_elastic_setup
+          dockerfile: Dockerfile
