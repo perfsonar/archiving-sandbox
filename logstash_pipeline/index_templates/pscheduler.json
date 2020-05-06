@@ -1,7 +1,11 @@
 {
-  "_doc": {
-    "_meta": {},
+  "version": 424,
+  "index_patterns": [
+    "pscheduler_*"
+  ],
+  "mappings": {
     "_source": {},
+    "_meta": {},
     "dynamic_templates": [
       {
         "ip_addresses": {
