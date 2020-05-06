@@ -1,0 +1,15 @@
+{
+  "version": 424,
+  "index_patterns": [
+    "rollup_5m_pscheduler_latencybg-*"
+  ],
+  "settings": {
+    "index.lifecycle.name": "rollup_pscheduler_default_policy",
+    "index.lifecycle.rollover_alias": "rollup_5m_pscheduler_latencybg"
+  },
+  "mappings": {
+    "_source": {},
+    "_meta": {},
+    "properties": {}
+  }
+}

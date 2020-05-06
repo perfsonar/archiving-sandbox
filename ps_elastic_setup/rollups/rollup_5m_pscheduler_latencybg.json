@@ -1,0 +1,148 @@
+{
+  "id": "rollup_5m_pscheduler_latencybg",
+  "index_pattern": "pscheduler_latencybg-*",
+  "rollup_index": "rollup_5m_pscheduler_latencybg",
+  "cron": "0 * * * * ?",
+  "page_size": 1000,
+  "groups": {
+    "date_histogram": {
+      "interval": "5m",
+      "delay": "30s",
+      "time_zone": "UTC",
+      "field": "pscheduler.start_time"
+    },
+    "terms": {
+      "fields": [
+        "pscheduler.test_checksum.keyword"
+      ]
+    }
+  },
+  "metrics": [
+    {
+      "field": "result.packets.lost",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.packets.sent",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.packets.reordered",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.packets.duplicated",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.variance",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.stddev",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.p_95",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.p_75",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.p_25",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.mode",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.min",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.median",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.mean",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    },
+    {
+      "field": "result.latency.max",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    }
+  ]
+}
