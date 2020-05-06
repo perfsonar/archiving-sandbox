@@ -36,7 +36,7 @@ DATA_FIELD_MAP = {
     "streams-packet-retransmits-subintervals/base": "result.intervals.json",
     "streams-throughput/base": "result.streams.json",
     "streams-throughput-subintervals/base": "result.intervals.json",
-    "throughput/base": "result.throughput_bits",
+    "throughput/base": "result.throughput",
     "throughput-subintervals/base": "result.intervals.json",
     "time-error-estimates/base": "result.max_clock_error"
 }
