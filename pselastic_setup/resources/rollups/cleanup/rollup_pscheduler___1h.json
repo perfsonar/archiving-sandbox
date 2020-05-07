@@ -1,0 +1,20 @@
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "pscheduler.start_time.date_histogram.interval": "1h"
+          }
+        },
+        {
+          "range": {
+            "pscheduler.start_time.date_histogram.timestamp": {
+              "lte": "now-1y"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

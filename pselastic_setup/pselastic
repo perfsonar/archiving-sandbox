@@ -23,7 +23,9 @@ Install:
  - ilm: Not needed or supported currently
  - rollups: Rollup indices do not currently work with ILM features meaning old 
    data needs to be deleted manually. This script periodically runs the "delete
-   by query" request defined in the JSON files of this action directory.
+   by query" request defined in the JSON files of this action directory. The 
+   files end in "__INTERVAL.json" as the __ is a signal to this code to replace
+   the end of the index with a wildcard when talking to elastic.
 '''
 
 import requests
@@ -54,7 +56,7 @@ class PSElasticUtil:
     def need_rollup(self, job_name, job, elastic_url):
         self.log.debug("resource=rollups action=need_rollup.start")
         
-        #1. First check if rollup job exists iin cache
+        #1. First check if rollup job exists in cache
         if job_name in self.rollups_exist:
             self.log.debug("resource=rollups action=need_rollup.end msg=Rollup exists in cache")
             return False
@@ -117,7 +119,8 @@ class PSElasticUtil:
     Loads a set of JSON files from a directory and PUTs them to elastic.
         resource: indicates the directory housing the 'action' subdirectory
         action: the subdirectory under the resources directory where JSON files live
-        elastic_path: the path to the the elastic endpoint. URL is built {elastic_url}/{elastic_path}/{filename before .json}
+        url_path_prefix: the part of the path before the resource name. URL is built {elastic_url}/{url_path_prefix}/{filename before .json}/{url_path_suffix}
+        url_path_suffix: the part of the path after the resource name. URL is built {elastic_url}/{url_path_prefix}/{filename before .json}/{url_path_suffix}
         config_dir: directory where resource directory lives
         elastic_url: base url of elastic
         pre_func: a function to be executed before performing main elastic operation for each file. If function returns false, will skip to next file
@@ -126,12 +129,14 @@ class PSElasticUtil:
     def load_from_file(self, 
                         resource,
                         action,
-                        elastic_path,
+                        url_path_prefix=None,
+                        url_path_suffix=None,
                         config_dir=DEFAULT_CONFIG_DIR,
                         elastic_url=DEFAULT_ELASTIC_URL,
                         pre_func=None,
-                        post_func=None
-                        ):
+                        post_func=None,
+                        http_method=requests.put
+                    ):
         #Iterate through items in the config_dir/resource/action directory
         dir="{0}/{1}/{2}".format(config_dir, resource, action)
         with os.scandir(dir) as dir_entries:
@@ -139,8 +144,15 @@ class PSElasticUtil:
                 #Skip unless it is a file ending in .json
                 if dir_entry.is_file() and dir_entry.name.endswith(".json"):
                     policy_name = re.sub(r'\.json$', "", dir_entry.name)
+                    #If __ at end of name with some text after, the replace with * 
+                    policy_name = re.sub(r'__.+$', "*", policy_name)
                     #Build the elastic URL
-                    url = "{0}/{1}/{2}".format(elastic_url, elastic_path, policy_name)
+                    url = elastic_url
+                    if url_path_prefix:
+                        url = "{0}/{1}".format(url, url_path_prefix)
+                    url = "{0}/{1}".format(url, policy_name)
+                    if url_path_suffix:
+                        url = "{0}/{1}".format(url, url_path_suffix)
                     self.log.debug("resource={0} action={1}.start file={2} url={3}".format(resource, action, dir_entry.path, url))
                     
                     try:
@@ -153,8 +165,8 @@ class PSElasticUtil:
                             self.log.debug("resource={0} action={1}.end file={2} url={3}".format(resource, action, dir_entry.path, url))
                             continue
                         
-                        #PUT the JSON to the target elastic URL
-                        r = requests.put(url=url, json=policy)
+                        #Send the JSON to the target elastic URL
+                        r = http_method(url=url, json=policy)
                         r.raise_for_status() #raise error if failed
                         self.log.info("resource={0} action={1}.end file={2} url={3} status={4} elastic_reponse={5}".format(resource, action, dir_entry.path, url, r.status_code, r.text))
                         
@@ -182,7 +194,7 @@ def _handle_resource_actions(args, pselastic):
                 pselastic.load_from_file(
                     resource, 
                     action, 
-                    "_ilm/policy", 
+                    url_path_prefix="_ilm/policy", 
                     config_dir=args.config_dir, 
                     elastic_url=args.elastic_url
                 )
@@ -191,11 +203,20 @@ def _handle_resource_actions(args, pselastic):
                 pselastic.load_from_file(
                     resource, 
                     action, 
-                    "_rollup/job",
+                    url_path_prefix="_rollup/job",
                     config_dir=args.config_dir,
                     elastic_url=args.elastic_url,
                     pre_func=pselastic.need_rollup, 
                     post_func=pselastic.start_rollup_job
+                )
+            elif action == "cleanup":
+                pselastic.load_from_file(
+                    resource, 
+                    action, 
+                    url_path_suffix="_delete_by_query",
+                    config_dir=args.config_dir,
+                    elastic_url=args.elastic_url,
+                    http_method=requests.post
                 )
         else:
             log.error("Unknown resource {0}".format(resource))
