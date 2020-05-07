@@ -1,0 +1,97 @@
+ #!/usr/bin/env python3
+
+import requests
+import argparse
+import os
+import re
+import json
+import sys 
+import time
+
+VALID_ACTIONS=['install', 'cleanup']
+DEFAULT_ELASTIC_URL="http://localhost:9200"
+DEFAULT_CONFIG_DIR="./resources"
+
+def start_rollup_job(job_name, job, elastic_url):
+    # Check if exists
+    url = "{0}/_rollup/job/{1}/_start".format(elastic_url, job_name)
+    try:
+        print("resource=rollups action=start_job.start url={0}".format(url))
+        r = requests.post(url=url)
+        r.raise_for_status()
+        print("resource=rollups action=start_job.end url={0} status={1} elastic_reponse={2}".format(url, r.status_code, r.text))
+    except:
+        print("resource=rollups action=start_job.error url={0} msg={1}".format(url, sys.exc_info()))
+        
+def load_from_file(resource, action, elastic_path, config_dir=DEFAULT_CONFIG_DIR, elastic_url=DEFAULT_ELASTIC_URL, post_func=None):
+    dir="{0}/{1}/{2}".format(config_dir, resource, action)
+    with os.scandir(dir) as dir_entries:
+         for dir_entry in dir_entries:
+            if dir_entry.is_file() and dir_entry.name.endswith(".json"):
+                policy_name = re.sub(r'\.json$', "", dir_entry.name)
+                url = "{0}/{1}/{2}".format(elastic_url, elastic_path, policy_name)
+                print("resource={0} action={1}.start file={2} url={3}".format(resource, action, dir_entry.path, url))
+                try:
+                    with open(dir_entry.path) as policy_file:
+                        policy = json.load(policy_file)
+                    r = requests.put(url=url, json=policy)
+                    r.raise_for_status() #raise error if failed
+                    print("resource={0} action={1}.end file={2} url={3} status={4} elastic_reponse={5}".format(resource, action, dir_entry.path, url, r.status_code, r.text))
+                    if post_func:
+                        post_func(policy_name, policy, elastic_url)
+                except:
+                    print("resource={0} action={1}.error file={2} url={3} msg={4}".format(resource, action, dir_entry.name, url, r.text))
+
+#Parse command-line args
+parser = argparse.ArgumentParser(description='Configure ElasticSearch for perfSONAR')
+parser.add_argument('-c', dest='config_dir', default=DEFAULT_CONFIG_DIR, type=str, help='The configuration directory')
+parser.add_argument('-u', dest='elastic_url', default=DEFAULT_ELASTIC_URL, type=str, help='The elastic URL.')
+parser.add_argument('--max-retries', dest='max_retries', default=0, type=int, help='Number of times to try to connect to elastic')
+parser.add_argument('--retry-wait', dest='retry_wait', default=1, type=int, help='Seconds to sleep between retries')
+parser.add_argument('action', nargs=1, default=None, type=str, help='The action to perform')
+parser.add_argument('resources', nargs='*', default=None, type=str, help='The resources on which to perform the action or all if not specified.')
+args = parser.parse_args()
+if args.action is None or len(args.action)==0:
+    print("You must specify an action. Valid values are: {0}".format(VALID_ACTIONS), file=sys.stderr)
+    sys.exit(1)
+action = args.action[0]
+if action not in VALID_ACTIONS:
+    print("Action {0} is invalid. Valid values are: {1}".format(action, VALID_ACTIONS), file=sys.stderr)
+    sys.exit(1)
+
+#0. Wait for elastic to come up
+retries = 0
+connected=False
+while retries <= args.max_retries and not connected:
+    retries += 1
+    try:
+        r = requests.get(url=args.elastic_url)
+        r.raise_for_status()
+        connected=True
+    except:
+        print("Unable to connect to elastic. Will retry again in {0} second(s).".format(args.retry_wait))
+        time.sleep(args.retry_wait)
+if not connected:
+    print("Unable to connect to elasticsearch after {0} attempts.".format(args.max_retries))
+    sys.exit(1)
+
+#get resources
+resources = args.resources
+if resources is None or len(resources) == 0:
+    resources=[]
+    with os.scandir(args.config_dir) as dir_entries:
+        for dir_entry in dir_entries:
+            if dir_entry.is_dir():
+                resources.append(dir_entry.name)
+
+#perform action on each resource
+for resource in resources:
+    if resource == "ilm":
+        if action == "install":
+            load_from_file(resource, action, "_ilm/policy", config_dir=args.config_dir, elastic_url=args.elastic_url)
+    elif resource == "rollups":
+        if action == "install":
+            load_from_file(resource, action, "_rollup/job", config_dir=args.config_dir, elastic_url=args.elastic_url, post_func=start_rollup_job)
+    else:
+        print("Unknown resource {0}".format(resource))
+        sys.exit(1)

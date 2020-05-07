@@ -12,4 +12,4 @@ VOLUME /app
 #Run the script and exit
 WORKDIR /app
 ENTRYPOINT ["python3"]
-CMD ["configure_elastic.py", "-c", "/app", "-u", "http://elasticsearch:9200"]
+CMD ["pselastic", "-c", "/app/resources", "-u", "http://elasticsearch:9200", "--max-retries", "120", "install", "ilm"]
