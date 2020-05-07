@@ -1,12 +1,12 @@
 {
-  "id": "rollup_5m_pscheduler_latencybg",
-  "index_pattern": "pscheduler_latencybg-*",
-  "rollup_index": "rollup_pscheduler_latencybg",
-  "cron": "*/5 * * * * ?",
+  "id": "rollup_1h_pscheduler_rtt",
+  "index_pattern": "pscheduler_rtt-*",
+  "rollup_index": "rollup_pscheduler_rtt",
+  "cron": "5 * * * * ?",
   "page_size": 1000,
   "groups": {
     "date_histogram": {
-      "interval": "5m",
+      "interval": "1h",
       "delay": "30s",
       "time_zone": "UTC",
       "field": "pscheduler.start_time"
@@ -55,7 +55,7 @@
       ]
     },
     {
-      "field": "result.latency.variance",
+      "field": "result.rtt.stddev",
       "metrics": [
         "avg",
         "max",
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "field": "result.latency.stddev",
+      "field": "result.rtt.min",
       "metrics": [
         "avg",
         "max",
@@ -73,7 +73,7 @@
       ]
     },
     {
-      "field": "result.latency.p_95",
+      "field": "result.rtt.mean",
       "metrics": [
         "avg",
         "max",
@@ -82,61 +82,7 @@
       ]
     },
     {
-      "field": "result.latency.p_75",
-      "metrics": [
-        "avg",
-        "max",
-        "min",
-        "value_count"
-      ]
-    },
-    {
-      "field": "result.latency.p_25",
-      "metrics": [
-        "avg",
-        "max",
-        "min",
-        "value_count"
-      ]
-    },
-    {
-      "field": "result.latency.mode",
-      "metrics": [
-        "avg",
-        "max",
-        "min",
-        "value_count"
-      ]
-    },
-    {
-      "field": "result.latency.min",
-      "metrics": [
-        "avg",
-        "max",
-        "min",
-        "value_count"
-      ]
-    },
-    {
-      "field": "result.latency.median",
-      "metrics": [
-        "avg",
-        "max",
-        "min",
-        "value_count"
-      ]
-    },
-    {
-      "field": "result.latency.mean",
-      "metrics": [
-        "avg",
-        "max",
-        "min",
-        "value_count"
-      ]
-    },
-    {
-      "field": "result.latency.max",
+      "field": "result.rtt.max",
       "metrics": [
         "avg",
         "max",

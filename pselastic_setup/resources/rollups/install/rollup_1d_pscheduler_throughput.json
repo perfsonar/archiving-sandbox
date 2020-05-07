@@ -1,0 +1,31 @@
+{
+  "id": "rollup_1d_pscheduler_throughput",
+  "index_pattern": "pscheduler_throughput-*",
+  "rollup_index": "rollup_pscheduler_throughput",
+  "cron": "30 12 * * * ?",
+  "page_size": 1000,
+  "groups": {
+    "date_histogram": {
+      "interval": "1d",
+      "delay": "30s",
+      "time_zone": "UTC",
+      "field": "pscheduler.start_time"
+    },
+    "terms": {
+      "fields": [
+        "pscheduler.test_checksum.keyword"
+      ]
+    }
+  },
+  "metrics": [
+    {
+      "field": "result.throughput",
+      "metrics": [
+        "avg",
+        "max",
+        "min",
+        "value_count"
+      ]
+    }
+  ]
+}

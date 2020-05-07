@@ -1,0 +1,94 @@
+{
+  "id": "rollup_5m_pscheduler_rtt",
+  "index_pattern": "pscheduler_rtt-*",
+  "rollup_index": "rollup_pscheduler_rtt",
+  "cron": "*/5 * * * * ?",
+  "page_size": 1000,
+  "groups": {
+    "date_histogram": {
+      "interval": "5m",
+      "delay": "30s",
+      "time_zone": "UTC",
+      "field": "pscheduler.start_time"
+    },
+    "terms": {
+      "fields": [
+        "pscheduler.test_checksum.keyword"
+      ]
+    }
+  },
+  "metrics": [
+      {
+        "field": "result.packets.lost",
+        "metrics": [
+          "avg",
+          "max",
+          "min",
+          "value_count"
+        ]
+      },
+      {
+        "field": "result.packets.sent",
+        "metrics": [
+          "avg",
+          "max",
+          "min",
+          "value_count"
+        ]
+      },
+      {
+        "field": "result.packets.reordered",
+        "metrics": [
+          "avg",
+          "max",
+          "min",
+          "value_count"
+        ]
+      },
+      {
+        "field": "result.packets.duplicated",
+        "metrics": [
+          "avg",
+          "max",
+          "min",
+          "value_count"
+        ]
+      },
+      {
+        "field": "result.rtt.stddev",
+        "metrics": [
+          "avg",
+          "max",
+          "min",
+          "value_count"
+        ]
+      },
+      {
+        "field": "result.rtt.min",
+        "metrics": [
+          "avg",
+          "max",
+          "min",
+          "value_count"
+        ]
+      },
+      {
+        "field": "result.rtt.mean",
+        "metrics": [
+          "avg",
+          "max",
+          "min",
+          "value_count"
+        ]
+      },
+      {
+        "field": "result.rtt.max",
+        "metrics": [
+          "avg",
+          "max",
+          "min",
+          "value_count"
+        ]
+      }
+  ]
+}

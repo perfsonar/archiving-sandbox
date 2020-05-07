@@ -1,12 +1,12 @@
 {
-  "id": "rollup_5m_pscheduler_latencybg",
+  "id": "rollup_1h_pscheduler_latencybg",
   "index_pattern": "pscheduler_latencybg-*",
   "rollup_index": "rollup_pscheduler_latencybg",
-  "cron": "*/5 * * * * ?",
+  "cron": "0 * * * * ?",
   "page_size": 1000,
   "groups": {
     "date_histogram": {
-      "interval": "5m",
+      "interval": "1h",
       "delay": "30s",
       "time_zone": "UTC",
       "field": "pscheduler.start_time"
