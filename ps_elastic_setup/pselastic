@@ -1,4 +1,30 @@
- #!/usr/bin/env python3
+'''
+Script that can send JSON files to ElasticSearch. It currently is intended to
+be used for install and cleanup actions. JSON files are in a "resource" directory
+under a subdirectory named for the "resource" (e.g. ilm, rollups) and then under 
+that is another directory for the "action" (e.g. install, cleanup). When you call 
+this script you specify an "action" and optionally a resource (no resource means
+all). For resource given, all the JSON files in the action directory are iterated
+over and submitted to ELasticSearch as the body of the respective request to the
+REST API. Request details such as API endpoint are currently hardcoded. Action
+specific details are below:
+
+Install:
+- ilm: It has logic to build index lifecycle managment (ILM) polcies. This is usally 
+  a one-off job but it is not harmful to run multiple times (other than 
+  unnecessary requests to server)
+- rollups: Rollups are more complicated than ILM. Rollups need special checks to see if 
+  a) a rollup job already exists and b) if the index it is trying to rollup 
+  exists since it won't install otherwise. There is a special --periodic option 
+  that can be used to keep this script constantly running and check if it needs 
+  to install a rollup for any newly created indices.
+  
+ Cleanup (NOT YET IMPLEMENTED):
+ - ilm: Not needed or supported currently
+ - rollups: Rollup indices do not currently work with ILM features meaning old 
+   data needs to be deleted manually. This script periodically runs the "delete
+   by query" request defined in the JSON files of this action directory.
+'''
 
 import requests
 import argparse
@@ -7,91 +33,246 @@ import re
 import json
 import sys 
 import time
+import logging
 
 VALID_ACTIONS=['install', 'cleanup']
 DEFAULT_ELASTIC_URL="http://localhost:9200"
 DEFAULT_CONFIG_DIR="./resources"
 
-def start_rollup_job(job_name, job, elastic_url):
-    # Check if exists
-    url = "{0}/_rollup/job/{1}/_start".format(elastic_url, job_name)
-    try:
-        print("resource=rollups action=start_job.start url={0}".format(url))
-        r = requests.post(url=url)
-        r.raise_for_status()
-        print("resource=rollups action=start_job.end url={0} status={1} elastic_reponse={2}".format(url, r.status_code, r.text))
-    except:
-        print("resource=rollups action=start_job.error url={0} msg={1}".format(url, sys.exc_info()))
+class PSElasticUtil:
+
+    def __init__(self, log=None):
+        self.rollups_exist = {}
+        if log:
+            self.log = log
+        else:
+            self.log = log.getLogger()
+
+    '''
+    Check if the index being rolled-up exists since rollup job can't be created until it does
+    '''
+    def need_rollup(self, job_name, job, elastic_url):
+        self.log.debug("resource=rollups action=need_rollup.start")
         
-def load_from_file(resource, action, elastic_path, config_dir=DEFAULT_CONFIG_DIR, elastic_url=DEFAULT_ELASTIC_URL, post_func=None):
-    dir="{0}/{1}/{2}".format(config_dir, resource, action)
-    with os.scandir(dir) as dir_entries:
-         for dir_entry in dir_entries:
-            if dir_entry.is_file() and dir_entry.name.endswith(".json"):
-                policy_name = re.sub(r'\.json$', "", dir_entry.name)
-                url = "{0}/{1}/{2}".format(elastic_url, elastic_path, policy_name)
-                print("resource={0} action={1}.start file={2} url={3}".format(resource, action, dir_entry.path, url))
-                try:
-                    with open(dir_entry.path) as policy_file:
-                        policy = json.load(policy_file)
-                    r = requests.put(url=url, json=policy)
-                    r.raise_for_status() #raise error if failed
-                    print("resource={0} action={1}.end file={2} url={3} status={4} elastic_reponse={5}".format(resource, action, dir_entry.path, url, r.status_code, r.text))
-                    if post_func:
-                        post_func(policy_name, policy, elastic_url)
-                except:
-                    print("resource={0} action={1}.error file={2} url={3} msg={4}".format(resource, action, dir_entry.name, url, r.text))
+        #1. First check if rollup job exists iin cache
+        if job_name in self.rollups_exist:
+            self.log.debug("resource=rollups action=need_rollup.end msg=Rollup exists in cache")
+            return False
 
-#Parse command-line args
-parser = argparse.ArgumentParser(description='Configure ElasticSearch for perfSONAR')
-parser.add_argument('-c', dest='config_dir', default=DEFAULT_CONFIG_DIR, type=str, help='The configuration directory')
-parser.add_argument('-u', dest='elastic_url', default=DEFAULT_ELASTIC_URL, type=str, help='The elastic URL.')
-parser.add_argument('--max-retries', dest='max_retries', default=0, type=int, help='Number of times to try to connect to elastic')
-parser.add_argument('--retry-wait', dest='retry_wait', default=1, type=int, help='Seconds to sleep between retries')
-parser.add_argument('action', nargs=1, default=None, type=str, help='The action to perform')
-parser.add_argument('resources', nargs='*', default=None, type=str, help='The resources on which to perform the action or all if not specified.')
-args = parser.parse_args()
-if args.action is None or len(args.action)==0:
-    print("You must specify an action. Valid values are: {0}".format(VALID_ACTIONS), file=sys.stderr)
-    sys.exit(1)
-action = args.action[0]
-if action not in VALID_ACTIONS:
-    print("Action {0} is invalid. Valid values are: {1}".format(action, VALID_ACTIONS), file=sys.stderr)
-    sys.exit(1)
+        #2. Next check if exists in Elastic
+        url = "{0}/_rollup/job/{1}".format(elastic_url, job_name)
+        try:
+            self.log.debug("resource=rollups action=check_rollup.start url={0}".format(url))
+            r = requests.get(url=url)
+            r.raise_for_status()
+            #if have jobs, then we do not need to create
+            if r.json() and r.json().get("jobs", None):
+                self.log.debug("resource=rollups action=check_rollup.end url={0} status={1} elastic_reponse={2}".format(url, r.status_code, r.text))
+                self.log.debug("resource=rollups action=need_rollup.end msg=Rollup exists in elastic")
+                self.rollups_exist[job_name] = True
+                return False
+            self.log.debug("resource=rollups action=check_rollup.end url={0} status={1} elastic_reponse={2}".format(url, r.status_code, r.text))
+        except:
+            self.log.error("resource=rollups action=check_rollup.error url={0} msg={1}".format(url, sys.exc_info()))
 
-#0. Wait for elastic to come up
-retries = 0
-connected=False
-while retries <= args.max_retries and not connected:
-    retries += 1
-    try:
-        r = requests.get(url=args.elastic_url)
-        r.raise_for_status()
-        connected=True
-    except:
-        print("Unable to connect to elastic. Will retry again in {0} second(s).".format(args.retry_wait))
-        time.sleep(args.retry_wait)
-if not connected:
-    print("Unable to connect to elasticsearch after {0} attempts.".format(args.max_retries))
-    sys.exit(1)
 
-#get resources
-resources = args.resources
-if resources is None or len(resources) == 0:
-    resources=[]
-    with os.scandir(args.config_dir) as dir_entries:
-        for dir_entry in dir_entries:
-            if dir_entry.is_dir():
-                resources.append(dir_entry.name)
+        #3. Next check if index to rollup exists which is required to create
+        #Get index_pattern from rollup job definition
+        index_pattern = job.get("index_pattern", None)
+        if not index_pattern:
+            self.log.error("resource=rollups action=need_rollup.error msg=Rollup job missing index_patterns")
+            return False
+        #build URL
+        url = "{0}/{1}".format(elastic_url, index_pattern)
+        #Get the index
+        create_rollup = False
+        try:
+            self.log.debug("resource=rollups action=check_source_index.start url={0}".format(url))
+            r = requests.get(url=url)
+            r.raise_for_status()
+            #if a non-empty json object, then we are good
+            if r.json():
+                create_rollup = True
+            self.log.debug("resource=rollups action=check_source_index.end url={0} status={1} elastic_reponse={2}".format(url, r.status_code, r.text))
+        except:
+            self.log.error("resource=rollups action=check_source_index.error url={0} msg={1}".format(url, sys.exc_info()))
+        
+        self.log.debug("resource=rollups action=need_rollup.end")
+        return create_rollup
 
-#perform action on each resource
-for resource in resources:
-    if resource == "ilm":
-        if action == "install":
-            load_from_file(resource, action, "_ilm/policy", config_dir=args.config_dir, elastic_url=args.elastic_url)
-    elif resource == "rollups":
-        if action == "install":
-            load_from_file(resource, action, "_rollup/job", config_dir=args.config_dir, elastic_url=args.elastic_url, post_func=start_rollup_job)
+    '''
+    Start a rollub job using the Elastic REST API
+    '''
+    def start_rollup_job(self, job_name, job, elastic_url):
+        url = "{0}/_rollup/job/{1}/_start".format(elastic_url, job_name)
+        try:
+            self.log.debug("resource=rollups action=start_job.start url={0}".format(url))
+            r = requests.post(url=url)
+            r.raise_for_status()
+            self.log.debug("resource=rollups action=start_job.end url={0} status={1} elastic_reponse={2}".format(url, r.status_code, r.text))
+        except:
+            self.log.error("resource=rollups action=start_job.error url={0} msg={1}".format(url, sys.exc_info()))
+
+    '''
+    Loads a set of JSON files from a directory and PUTs them to elastic.
+        resource: indicates the directory housing the 'action' subdirectory
+        action: the subdirectory under the resources directory where JSON files live
+        elastic_path: the path to the the elastic endpoint. URL is built {elastic_url}/{elastic_path}/{filename before .json}
+        config_dir: directory where resource directory lives
+        elastic_url: base url of elastic
+        pre_func: a function to be executed before performing main elastic operation for each file. If function returns false, will skip to next file
+        post_func: a function to be run after a successful run of an operation
+    '''
+    def load_from_file(self, 
+                        resource,
+                        action,
+                        elastic_path,
+                        config_dir=DEFAULT_CONFIG_DIR,
+                        elastic_url=DEFAULT_ELASTIC_URL,
+                        pre_func=None,
+                        post_func=None
+                        ):
+        #Iterate through items in the config_dir/resource/action directory
+        dir="{0}/{1}/{2}".format(config_dir, resource, action)
+        with os.scandir(dir) as dir_entries:
+             for dir_entry in dir_entries:
+                #Skip unless it is a file ending in .json
+                if dir_entry.is_file() and dir_entry.name.endswith(".json"):
+                    policy_name = re.sub(r'\.json$', "", dir_entry.name)
+                    #Build the elastic URL
+                    url = "{0}/{1}/{2}".format(elastic_url, elastic_path, policy_name)
+                    self.log.debug("resource={0} action={1}.start file={2} url={3}".format(resource, action, dir_entry.path, url))
+                    
+                    try:
+                        #Open the file and load the JSON
+                        with open(dir_entry.path) as policy_file:
+                            policy = json.load(policy_file)
+                        
+                        #Run the pre-function which should tell us if we can perform this operation
+                        if pre_func and not pre_func(policy_name, policy, elastic_url):
+                            self.log.debug("resource={0} action={1}.end file={2} url={3}".format(resource, action, dir_entry.path, url))
+                            continue
+                        
+                        #PUT the JSON to the target elastic URL
+                        r = requests.put(url=url, json=policy)
+                        r.raise_for_status() #raise error if failed
+                        self.log.info("resource={0} action={1}.end file={2} url={3} status={4} elastic_reponse={5}".format(resource, action, dir_entry.path, url, r.status_code, r.text))
+                        
+                        #If there is a post function, do that operation
+                        if post_func:
+                            post_func(policy_name, policy, elastic_url)
+                    except:
+                        self.log.error("resource={0} action={1}.error file={2} url={3} msg={4}".format(resource, action, dir_entry.name, url, r.text))
+
+def _handle_resource_actions(args, pselastic):
+    #get resources
+    action = args.action[0]
+    resources = args.resources
+    if resources is None or len(resources) == 0:
+        resources=[]
+        with os.scandir(args.config_dir) as dir_entries:
+            for dir_entry in dir_entries:
+                if dir_entry.is_dir():
+                    resources.append(dir_entry.name)
+
+    #perform action on each resource
+    for resource in resources:
+        if resource == "ilm":
+            if action == "install":
+                pselastic.load_from_file(
+                    resource, 
+                    action, 
+                    "_ilm/policy", 
+                    config_dir=args.config_dir, 
+                    elastic_url=args.elastic_url
+                )
+        elif resource == "rollups":
+            if action == "install":
+                pselastic.load_from_file(
+                    resource, 
+                    action, 
+                    "_rollup/job",
+                    config_dir=args.config_dir,
+                    elastic_url=args.elastic_url,
+                    pre_func=pselastic.need_rollup, 
+                    post_func=pselastic.start_rollup_job
+                )
+        else:
+            log.error("Unknown resource {0}".format(resource))
+            sys.exit(1)
+
+'''
+Main function to execute
+'''
+def main():
+    #Parse command-line args
+    parser = argparse.ArgumentParser(description='Configure ElasticSearch for perfSONAR')
+    parser.add_argument('-c', dest='config_dir', default=DEFAULT_CONFIG_DIR, type=str, help='The configuration directory')
+    parser.add_argument('-u', dest='elastic_url', default=DEFAULT_ELASTIC_URL, type=str, help='The elastic URL.')
+    parser.add_argument('--log-config', dest='log_config', default=None, type=str, help='A logging configuration file to give to python logging')
+    parser.add_argument('--verbose', dest='verbose', action='store_true', help='Give more output')
+    parser.add_argument('--max-retries', dest='max_retries', default=0, type=int, help='Number of times to try to connect to elastic')
+    parser.add_argument('--retry-wait', dest='retry_wait', default=1, type=int, help='Seconds to sleep between retries')
+    parser.add_argument('--periodic', dest='periodic', default=0, type=int, help='Run this action periodically every number of seconds specified.')
+    parser.add_argument('action', nargs=1, default=None, type=str, help='The action to perform')
+    parser.add_argument('resources', nargs='*', default=None, type=str, help='The resources on which to perform the action or all if not specified.')
+    args = parser.parse_args()
+    
+    #Setup logging
+    if args.log_config:
+        logging.config.fileConfig(args.log_config)
+        log = logging.getLogger('pselastic')
     else:
-        print("Unknown resource {0}".format(resource))
+        logging.basicConfig(format="time=%(asctime)s level=%(levelname)s %(message)s")
+        log = logging.getLogger() 
+        if args.verbose:
+            log.setLevel(logging.DEBUG)
+        else:
+            log.setLevel(logging.INFO)
+        
+    #basic arg checking
+    if args.action is None or len(args.action)==0:
+        log.error("msg=You must specify an action. Valid values are: {0}".format(VALID_ACTIONS), file=sys.stderr)
         sys.exit(1)
+    if args.action[0] not in VALID_ACTIONS:
+        log.error("msg=Action {0} is invalid. Valid values are: {1}".format(args.action[0], VALID_ACTIONS), file=sys.stderr)
+        sys.exit(1)
+    
+    #Get down to business
+    if args.periodic > 0:
+        log.info("resources={0} action={1} msg=Started".format(args.resources, args.action[0]))
+    pselastic = PSElasticUtil(log=log)
+    while True:
+        #0. Wait for elastic to come up
+        retries = 0
+        connected=False
+        while retries <= args.max_retries and not connected:
+            retries += 1
+            try:
+                r = requests.get(url=args.elastic_url)
+                r.raise_for_status()
+                connected=True
+            except:
+                retry_str=" Last attempt."
+                if retries <= args.max_retries:
+                    retry_str = " Will retry again in {0} second(s).".format(args.retry_wait)
+                log.error("msg=Unable to connect to elastic.{0}".format(retry_str))
+                time.sleep(args.retry_wait)
+        
+        #if connected, do our job, otherwise go back to sleep
+        if connected:
+            _handle_resource_actions(args, pselastic)
+        else:
+            log.error("msg=Unable to connect to elasticsearch after {0} attempts.".format(args.max_retries+1))
+
+        # if periodic, sleep, otherwise we are done
+        if args.periodic > 0:
+            time.sleep(args.periodic)
+        else:
+            break
+
+'''
+Handle when called from command-line
+'''
+if __name__ == "__main__":
+    main()

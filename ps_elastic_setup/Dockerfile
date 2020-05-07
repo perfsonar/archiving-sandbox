@@ -9,7 +9,10 @@ RUN \
 #shared volumes
 VOLUME /app
 
-#Run the script and exit
+#Run the script to install ILM policies then run in periodic mode to 
+#install rollups as needed. Thiis is because rollups need an index to exist 
+#before they can do a rollup
 WORKDIR /app
-ENTRYPOINT ["python3"]
-CMD ["pselastic", "-c", "/app/resources", "-u", "http://elasticsearch:9200", "--max-retries", "120", "install", "ilm"]
+CMD \
+    python3 pselastic -u http://elasticsearch:9200 --max-retries 120 install ilm && \
+    python3 pselastic -u http://elasticsearch:9200 --periodic 60 install rollups
