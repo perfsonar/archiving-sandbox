@@ -14,5 +14,5 @@ VOLUME /app
 #before they can do a rollup
 WORKDIR /app
 CMD \
-    python3 pselastic -u http://elasticsearch:9200 --max-retries 120 install ilm && \
-    python3 pselastic -u http://elasticsearch:9200 --periodic 60 install rollups
+    python3 pselastic --max-retries 120 install ilm && \
+    python3 pselastic --periodic 60 install rollups

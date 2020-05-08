@@ -229,7 +229,7 @@ def main():
     #Parse command-line args
     parser = argparse.ArgumentParser(description='Configure ElasticSearch for perfSONAR')
     parser.add_argument('-c', dest='config_dir', default=DEFAULT_CONFIG_DIR, type=str, help='The configuration directory')
-    parser.add_argument('-u', dest='elastic_url', default=DEFAULT_ELASTIC_URL, type=str, help='The elastic URL.')
+    parser.add_argument('-u', dest='elastic_url', default=None, type=str, help='The elastic URL. Can also be set with PSELASTIC_URL environment variable. Command-line option takes precedence if both present.')
     parser.add_argument('--log-config', dest='log_config', default=None, type=str, help='A logging configuration file to give to python logging')
     parser.add_argument('--verbose', dest='verbose', action='store_true', help='Give more output')
     parser.add_argument('--max-retries', dest='max_retries', default=0, type=int, help='Number of times to try to connect to elastic')
@@ -259,6 +259,10 @@ def main():
         log.error("msg=Action {0} is invalid. Valid values are: {1}".format(args.action[0], VALID_ACTIONS), file=sys.stderr)
         sys.exit(1)
     
+    #check for URL environment variable
+    if not args.elastic_url:
+        args.elastic_url = os.environ.get('PSELASTIC_URL', DEFAULT_ELASTIC_URL)
+
     #Get down to business
     if args.periodic > 0:
         log.info("resources={0} action={1} msg=Started".format(args.resources, args.action[0]))
