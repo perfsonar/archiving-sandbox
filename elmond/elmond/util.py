@@ -31,6 +31,8 @@ def iso8601_to_seconds(val):
     return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10.0**6) / 10.0**6
 
 def datestr_to_timestamp(datestr):
+    if not datestr: 
+        return None
     return int(dateutil.parser.parse(datestr).timestamp())
     
 def build_uri(md_key, event_type=None, summary_type='base', summary_window=0):

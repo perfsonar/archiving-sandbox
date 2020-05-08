@@ -24,6 +24,7 @@
           "avg",
           "max",
           "min",
+          "sum",
           "value_count"
         ]
       },
@@ -33,6 +34,7 @@
           "avg",
           "max",
           "min",
+          "sum",
           "value_count"
         ]
       },
@@ -42,6 +44,7 @@
           "avg",
           "max",
           "min",
+          "sum",
           "value_count"
         ]
       },
@@ -51,6 +54,7 @@
           "avg",
           "max",
           "min",
+          "sum",
           "value_count"
         ]
       },

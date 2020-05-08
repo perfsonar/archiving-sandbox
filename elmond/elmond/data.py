@@ -5,10 +5,10 @@ import re
 
 DEFAULT_RESULT_LIMIT=1000
 MAX_RESULT_LIMIT=10000
-#TODO: DELETE THIS
-SUPPORTED_SUMMARIES = {
-    "base": True,
-    "statistics": True
+SUMMARY_WINDOW_ROLLUP_NAME = {
+    "300": "5m",
+    "3600": "1h",
+    "86400": "1d",
 }
 DATA_FIELD_MAP = {
     "failures/base": "result.error",
@@ -18,12 +18,17 @@ DATA_FIELD_MAP = {
     "histogram-ttl/statistics": "result.ttl",
     "histogram-rtt/base": "result.rtt.histogram",
     "histogram-rtt/statistics": "result.rtt",
+    "packet-count-lost/aggregations": "result.packets.lost.sum.value",
     "packet-count-lost/base": "result.packets.lost",
+    "packet-count-lost-bidir/aggregations": "result.packets.lost.sum.value",
     "packet-count-lost-bidir/base": "result.packets.lost",
+    "packet-count-sent/aggregations": "result.packets.sent.sum.value",
     "packet-count-sent/base": "result.packets.sent",
     "packet-duplicates/base": "result.packets.duplicated",
     "packet-duplicates-bidir/base": "result.packets.duplicated",
+    "packet-loss-rate/aggregations": "result.packets",
     "packet-loss-rate/base": "result.packets.loss",
+    "packet-loss-rate-bidir/aggregations": "result.packets",
     "packet-loss-rate-bidir/base": "result.packets.loss",
     "packet-reorders/base": "result.packets.reordered",
     "packet-reorders-bidir/base": "result.packets.reordered",
@@ -36,6 +41,7 @@ DATA_FIELD_MAP = {
     "streams-packet-retransmits-subintervals/base": "result.intervals.json",
     "streams-throughput/base": "result.streams.json",
     "streams-throughput-subintervals/base": "result.intervals.json",
+    "throughput/averages": "result.throughput",
     "throughput/base": "result.throughput",
     "throughput-subintervals/base": "result.intervals.json",
     "time-error-estimates/base": "result.max_clock_error"
@@ -43,6 +49,16 @@ DATA_FIELD_MAP = {
 
 log = logging.getLogger('elmond')
 
+def _calc_rollup_average(obj, key):
+    val = obj.get("{0}.avg.value".format(key), None)
+    if val is None:
+        return None
+    count = obj.get("{0}.avg._count".format(key), None)
+    if not count:
+        return None
+    
+    return float(val)/count
+    
 def _build_esmond_histogram(elastic_histo):
     values = elastic_histo.get("values", [])
     counts = elastic_histo.get("counts", [])
@@ -92,23 +108,36 @@ def _extract_result_field(key, result):
     
     return curr_field
 
-def _extract_result_stats(key, result):
-    field = _extract_result_field(key, result)
-    if field is None:
-        return None
-    
-    return {
-        "maximum": field.get("max", None),
-        "mean": field.get("mean", None),
-        "median": field.get("median", None),
-        "minimum": field.get("min", None),
-        "mode": field.get("mode", None),
-        "percentile-25": field.get("p_25", None),
-        "percentile-75": field.get("p_75", None),
-        "percentile-95": field.get("p_95", None),
-        "standard-deviation": field.get("stddev", None),
-        "variance": field.get("variance", None)
-    }
+def _extract_result_stats(key, result, is_rollup=False):
+    if is_rollup:
+        return {
+            "maximum": result.get("{0}.max.max.value".format(key), None),
+            "mean": _calc_rollup_average(result, "{0}.mean".format(key)),
+            "median": _calc_rollup_average(result, "{0}.median".format(key)),
+            "minimum": result.get("{0}.min.min.value".format(key), None),
+            "mode": [_calc_rollup_average(result, "{0}.mode".format(key))],
+            "percentile-25": _calc_rollup_average(result, "{0}.p_25".format(key)),
+            "percentile-75": _calc_rollup_average(result, "{0}.p_75".format(key)),
+            "percentile-95": _calc_rollup_average(result, "{0}.p_95".format(key)),
+            "standard-deviation": _calc_rollup_average(result, "{0}.stddev".format(key)),
+            "variance": _calc_rollup_average(result, "{0}.variance".format(key))
+        }
+    else:
+        field = _extract_result_field(key, result)
+        if field is None:
+            return None
+        return {
+            "maximum": field.get("max", None),
+            "mean": field.get("mean", None),
+            "median": field.get("median", None),
+            "minimum": field.get("min", None),
+            "mode": field.get("mode", None),
+            "percentile-25": field.get("p_25", None),
+            "percentile-75": field.get("p_75", None),
+            "percentile-95": field.get("p_95", None),
+            "standard-deviation": field.get("stddev", None),
+            "variance": field.get("variance", None)
+        }
 
 def _extract_result_subinterval(key, interval_obj):
     start = interval_obj.get("start", None)
@@ -177,7 +206,14 @@ def _extract_result_streams(key, result, event_type):
         vals.append(_extract_result_field(stream_key, stream))
 
     return vals
+
+def _extract_packet_loss_rate(obj, key):
+    lost_val = obj.get(DATA_FIELD_MAP["packet-count-lost/aggregations"], None)
+    sent_val = obj.get(DATA_FIELD_MAP["packet-count-sent/aggregations"], None)
+    if lost_val is None or not sent_val:
+        return None
     
+    return float(lost_val)/sent_val
 
 class EsmondData:
 
@@ -185,16 +221,26 @@ class EsmondData:
         self.es = es
     
     def fetch(self, metadata_key, event_type, summary_type, summary_window, q={}):
-        #right now we can't handle summaries
         log.debug("{0} {1}".format(summary_type, summary_window))
         #convert summary window to int
         try:
             summary_window = int(summary_window)
         except ValueError as e:
             raise BadRequest("Summary window must be an int")
-        if summary_type not in SUPPORTED_SUMMARIES or summary_window != 0:
-            raise NotImplemented("Currently only base and statistics summaries with window 0 are supported")
         
+        #determine whether we are hitting normal or rollup index
+        #hit * because event types can belong to multiple test types
+        #probably a may efficient way to do this
+        is_rollup=False
+        index_name="pscheduler_*"
+        time_field = "pscheduler.start_time"
+        checksum_field = "pscheduler.test_checksum"
+        if summary_window > 0:
+            is_rollup=True
+            index_name = "rollup_{0}".format(index_name)
+            time_field = "{0}.date_histogram.timestamp".format(time_field)
+            checksum_field = "{0}.keyword.terms.value".format(checksum_field)
+
         #handle limit and offset
         result_size = DEFAULT_RESULT_LIMIT
         result_offset = 0
@@ -211,17 +257,14 @@ class EsmondData:
         if result_size > MAX_RESULT_LIMIT:
             raise BadRequest("{0} parameter cannot exceed {1}".format(LIMIT_FILTER, MAX_RESULT_LIMIT))
 
-        #optimization: filter based on whether we want succeeded or not
-        succeeded_filter_val = (event_type != 'failures')
-
         #data query
         dsl = {
             "size": result_size,
             "from": result_offset,
-            "_source": ["pscheduler.start_time"],
+            "_source": [ time_field ],
             "sort": [
               {
-                "pscheduler.start_time": {
+                time_field: {
                   "order": "asc"
                 }
               }
@@ -231,21 +274,27 @@ class EsmondData:
                 "filter": [
                   {
                     "term": {
-                      "pscheduler.test_checksum": metadata_key
-                    }
-                  },
-                  {
-                    "term": {
-                      "result.succeeded": succeeded_filter_val
+                      checksum_field: metadata_key
                     }
                   }
                 ]
               }
             }
         }
+        #Add rollup and non-rollup specific filters
+        if is_rollup:
+            #make sure we are getting the right window
+            sw=str(summary_window)
+            if sw not in SUMMARY_WINDOW_ROLLUP_NAME:
+                raise BadRequest("{0} is not a supported summary_window".format(sw))
+            dsl["query"]["bool"]["filter"].append({ "term": { "pscheduler.start_time.date_histogram.interval": SUMMARY_WINDOW_ROLLUP_NAME[sw] } })
+        else:
+            #optimization: filter based on whether we want succeeded or not
+            succeeded_filter_val = (event_type != 'failures')
+            dsl["query"]["bool"]["filter"].append({ "term": { "result.succeeded": succeeded_filter_val } })
         
         #handle time filters
-        time_filter = build_time_filter(q)
+        time_filter = build_time_filter(q, time_field=time_field)
         if time_filter:
             dsl["query"]["bool"]["filter"].append(time_filter)
         
@@ -264,24 +313,33 @@ class EsmondData:
             raise BadRequest("Unrecognized event type {0}".format(event_type))
         
         #exec query
-        res = self.es.search(index="pscheduler_*", body=dsl)
+        res = self.es.search(index=index_name, body=dsl)
         hits = res.get("hits", {}).get("hits", [])
         
         #parse results
         data = []
         for hit in hits:
-            #get time stamp
-            ts = hit.get("_source", {}).get("pscheduler", {}).get("start_time", None) 
-            result = hit.get("_source", {}).get("result", None)
+            #get timestamp
+            result={}
+            if is_rollup:
+                #already a timestamp
+                ts = hit.get("_source", {}).get("pscheduler.start_time.date_histogram.timestamp", None)
+                if ts:
+                    ts = int(ts/1000)
+                result = hit.get("_source", None)
+            else:
+                #date string we have to convert
+                ts = datestr_to_timestamp(hit.get("_source", {}).get("pscheduler", {}).get("start_time", None))
+                result = hit.get("_source", {}).get("result", None)
             if not ts or not result:
                 continue
-            datum = { "ts": datestr_to_timestamp(ts) }
+            datum = { "ts": ts }
             #get value - event type specific. 
             # Note: right now it either spits out an empty string or just gives raw results for unsupported event types
             if raw_type:
                 datum["val"] = result
             elif event_type.startswith("histogram-") and summary_type == "statistics":
-                datum["val"] = _extract_result_stats(DATA_FIELD_MAP[dfm_key], result)
+                datum["val"] = _extract_result_stats(DATA_FIELD_MAP[dfm_key], result, is_rollup=is_rollup)
             elif event_type.startswith("histogram-"):
                 hist = _extract_result_field(DATA_FIELD_MAP[dfm_key], result)
                 if not hist:
@@ -298,6 +356,13 @@ class EsmondData:
                 if err_msg is None:
                     continue
                 datum["val"] = { "error": err_msg }
+            elif event_type.startswith("packet-loss-rate") and summary_type == "aggregations":
+                datum["val"] = _extract_packet_loss_rate(result, DATA_FIELD_MAP[dfm_key])
+            elif summary_type == "averages":
+                datum["val"] = _calc_rollup_average(result, DATA_FIELD_MAP[dfm_key])
+            elif is_rollup:
+                #rollups just have dotted string keys
+                datum["val"] = result.get(DATA_FIELD_MAP[dfm_key], None)
             else:
                 #extract from the map
                 datum["val"] = _extract_result_field(DATA_FIELD_MAP[dfm_key], result)

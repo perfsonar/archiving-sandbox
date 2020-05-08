@@ -93,34 +93,19 @@ DEFAULT_SUMMARIES = {
     ],
     "histogram-owdelay": [
         {
-            "summary-window":   300,
-            "event-type":   "histogram-owdelay",
-            "summary-type":   "aggregation",
-        },
-        {
-            "summary-window":   300,
-            "event-type":   "histogram-owdelay",
-            "summary-type":   "statistics",
-        },
-        {
-            "summary-window":   3600,
-            "event-type":   "histogram-owdelay",
-            "summary-type":   "aggregation",
-        },
-        {
             "summary-window":   0,
             "event-type":   "histogram-owdelay",
             "summary-type":   "statistics",
         },
         {
-            "summary-window":   3600,
+            "summary-window":   300,
             "event-type":   "histogram-owdelay",
             "summary-type":   "statistics",
         },
         {
-            "summary-window":   86400,
+            "summary-window":   3600,
             "event-type":   "histogram-owdelay",
-            "summary-type":   "aggregation",
+            "summary-type":   "statistics",
         },
         {
             "summary-window":   86400,
@@ -129,6 +114,11 @@ DEFAULT_SUMMARIES = {
         },
     ],
     "packet-loss-rate-bidir":[
+        {
+            "summary-window":   300,
+            "event-type":   "packet-loss-rate-bidir",
+            "summary-type":   "aggregation",
+        },
         {
             "summary-window":   3600,
             "event-type":   "packet-loss-rate-bidir",
@@ -147,20 +137,14 @@ DEFAULT_SUMMARIES = {
             "summary-type": "statistics",
         },
         {
-            "summary-window":   3600,
+            "summary-window":   300,
             "event-type":   "histogram-rtt",
-            "summary-type":   "aggregation",
+            "summary-type":   "statistics",
         },
-    
         {
             "summary-window":   3600,
             "event-type":   "histogram-rtt",
             "summary-type":  "statistics",
-        },
-        {
-            "summary-window":   86400,
-            "event-type":   "histogram-rtt",
-            "summary-type":   "aggregation",
         },
         {
             "summary-window":   86400,
