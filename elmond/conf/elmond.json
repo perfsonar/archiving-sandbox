@@ -19,5 +19,10 @@
                 "summary-type":   "aggregation"
             }
         ]
+    },
+    "#SUMMARY_WINDOW_ROLLUP_NAMES": {
+        "300": "5m",
+        "3600": "1h",
+        "86400": "1d",
     }
 }

@@ -5,7 +5,7 @@ import re
 
 DEFAULT_RESULT_LIMIT=1000
 MAX_RESULT_LIMIT=10000
-SUMMARY_WINDOW_ROLLUP_NAME = {
+DEFAULT_SUMMARY_WINDOW_ROLLUP_NAME = {
     "300": "5m",
     "3600": "1h",
     "86400": "1d",
@@ -284,10 +284,13 @@ class EsmondData:
         #Add rollup and non-rollup specific filters
         if is_rollup:
             #make sure we are getting the right window
+            sw_map = app.config.get('ELMOND', {}).get('SUMMARY_WINDOW_ROLLUP_NAMES', None)
+            if not sw_map:
+                sw_map = DEFAULT_SUMMARY_WINDOW_ROLLUP_NAME
             sw=str(summary_window)
-            if sw not in SUMMARY_WINDOW_ROLLUP_NAME:
+            if sw not in sw_map:
                 raise BadRequest("{0} is not a supported summary_window".format(sw))
-            dsl["query"]["bool"]["filter"].append({ "term": { "pscheduler.start_time.date_histogram.interval": SUMMARY_WINDOW_ROLLUP_NAME[sw] } })
+            dsl["query"]["bool"]["filter"].append({ "term": { "pscheduler.start_time.date_histogram.interval": sw_map[sw] } })
         else:
             #optimization: filter based on whether we want succeeded or not
             succeeded_filter_val = (event_type != 'failures')
