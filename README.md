@@ -27,7 +27,7 @@ cd archiving-sandbox
 ```
 cp env.example .env
 ```
-5. Build the *elmond* container (the Esmond to ElasticSearch backward compatibility layer):
+5. Build the *elmond* and *pselastic_setup* containers:
 ```
 docker-compose -f docker-compose.build.yml build
 ```
@@ -64,6 +64,8 @@ The docker-compose file creates the following containers:
 - **kibana** - A Kibana container you can use to browse ElasticSearch. You can access the Kibana interface at http://localhost:5601.
 
 - **elmond** - A container that allows you to query ElasticSearch with the Esmond API. You can access the Esmond API at http://localhost:5000.
+
+- **pselastic_setup** - A container that creates the index lifecycle management policy (ILM) and every minute (configurable) checks if a new index has been created that needs a new rollup job. Rollup jobs cannot be created until the index to be rolled-up is created, hence the need for this check.
 
 
 ## Using the containers
