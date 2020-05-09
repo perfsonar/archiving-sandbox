@@ -1,3 +1,4 @@
 {
-    "ELASTIC_HOSTS": [ "10.7.7.7" ]
+    "ELASTIC_HOSTS": [ "10.7.7.7" ],
+    "PROXY_PATH": "/esmond/perfsonar/archive"
 }

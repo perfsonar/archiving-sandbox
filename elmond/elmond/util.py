@@ -20,6 +20,13 @@ OFFSET_FILTER = "offset"
 
 def iso8601_to_seconds(val):
     """Convert an ISO 8601 string to a timdelta"""
+    
+    #check if it is already in seconds - this happens a lot in esmond
+    try:
+        return int(val)
+    except:
+        pass
+        
     # TODO: Decide what to do with months or years.
     try:
         td = isodate.parse_duration(val)
