@@ -278,8 +278,8 @@ class EsmondMetadataFieldParser:
         if not et_summary_map:
             et_summary_map = DEFAULT_SUMMARIES
         #Map summaries to event type
+        et["summaries"] = [] #make sure we always have an empty list to match esmond
         if event_type in et_summary_map:
-            et["summaries"] = []
             for summary in et_summary_map[event_type]:
                 summ_obj = {
                     "event-type":   summary["event-type"],

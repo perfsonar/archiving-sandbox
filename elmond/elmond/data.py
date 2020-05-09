@@ -207,6 +207,50 @@ def _extract_result_streams(key, result, event_type):
 
     return vals
 
+def _extract_packet_trace(key, result, event_type):
+    paths = _extract_result_field(key, result)
+    packet_trace_multi = []
+    packet_trace = None
+    for path in paths:
+        formatted_path = []
+        for (hop_num, hop) in enumerate(path):
+            formatted_hop = {}
+            formatted_hop['ttl'] = hop_num + 1
+            formatted_hop['query'] = 1 #trace test doesn't support multiple  queries
+            #determine success
+            if hop.get("error", None):
+                formatted_hop['success'] = 0
+                formatted_hop['error-message'] = hop["error"]
+            else:
+                formatted_hop['success'] = 1
+            #figure out what other info we have
+            if hop.get("ip", None): 
+                formatted_hop['ip'] = hop['ip']
+            if hop.get("hostname", None): 
+                formatted_hop['hostname'] = hop['hostname']
+            if hop.get("as", None): 
+                formatted_hop['as'] = hop['as']
+            if ("rtt" in hop) and (hop["rtt"] is not None): 
+                formatted_hop['rtt'] = iso8601_to_seconds(hop['rtt'])*1000 #convert to ms
+            if ("mtu" in hop) and (hop["mtu"] is not None): 
+                formatted_hop['mtu'] = hop["mtu"]
+                mtu = hop["mtu"]
+            elif mtu is not None:
+                formatted_hop['mtu'] = mtu
+            formatted_path.append(formatted_hop)
+        #append formatted path to list of paths
+        packet_trace_multi.append(formatted_path)
+        #add first path as packet-trace path - need this for backward compatibility
+        if not packet_trace:
+            packet_trace = formatted_path
+    
+    #return correct packet trace
+    if event_type.endswith('multi'):
+        return packet_trace_multi
+    
+    return packet_trace
+
+
 def _extract_packet_loss_rate(obj, key):
     lost_val = obj.get(DATA_FIELD_MAP["packet-count-lost/aggregations"], None)
     sent_val = obj.get(DATA_FIELD_MAP["packet-count-sent/aggregations"], None)
@@ -354,6 +398,8 @@ class EsmondData:
                 datum["val"] = _extract_result_streams(DATA_FIELD_MAP[dfm_key], result, event_type)
             elif event_type.endswith("subintervals"):
                 datum["val"] = _extract_result_subintervals(DATA_FIELD_MAP[dfm_key], result, event_type)
+            elif event_type.startswith("packet-trace"):
+                datum["val"] = _extract_packet_trace(DATA_FIELD_MAP[dfm_key], result, event_type)
             elif event_type == 'failures':
                 err_msg =  _extract_result_field(DATA_FIELD_MAP[dfm_key], result)
                 if err_msg is None:
