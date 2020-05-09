@@ -211,6 +211,7 @@ def _extract_packet_trace(key, result, event_type):
     paths = _extract_result_field(key, result)
     packet_trace_multi = []
     packet_trace = None
+    mtu = None  # current mtu
     for path in paths:
         formatted_path = []
         for (hop_num, hop) in enumerate(path):
