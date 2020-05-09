@@ -241,7 +241,7 @@ class EsmondMetadataFieldParser:
             for field in reference:
                 if field.startswith('_'):
                     continue
-                key = "pscheduler-reference-%s" % (field)
+                key = "pscheduler-reference-{0}".format(field)
                 val = reference[field]
                 self._parse_metadata_field(key, val, target)
         #add event types 
@@ -254,13 +254,13 @@ class EsmondMetadataFieldParser:
     def _parse_metadata_field(self, key, val, target):
         if type(val) is list:
             for (i, v) in enumerate(val):
-                k = "%s-%d" % (key, i)
+                k = "{0}-{1}".format(key, i)
                 target[k] = v
         elif type(val) is dict:
             for sub_key in val:
                 if sub_key.startswith('_'):
                     continue
-                k = "%s-%s" % (key, sub_key)
+                k = "{0}-{1}".format(key, sub_key)
                 self._parse_metadata_field(k, val[sub_key], target)
         else:
             target[key] = val
@@ -435,7 +435,7 @@ class EsmondRawMetadataFieldParser(EsmondMetadataFieldParser):
     
     def _add_additional_metadata(self, test_spec, target):
         for field in test_spec:
-            key = "pscheduler-%s-%s" % (self.test_type, field)
+            key = "pscheduler-{0}-{1}".format(self.test_type, field)
             val = test_spec[field]
             self._parse_metadata_field(key, val, target)
 

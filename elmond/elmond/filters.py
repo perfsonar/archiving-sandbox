@@ -169,7 +169,7 @@ def _build_ip_filter(key, host, dns_match_rule=DNS_MATCH_V4_V6):
         addr6 = lookup_hostname(host, AF_INET6)
         addr4 = lookup_hostname(host, AF_INET)
     else:
-        raise BadRequest("Invalid dns-match-rule parameter {0}" % (dns_match_rule))
+        raise BadRequest("Invalid dns-match-rule parameter {0}".format(dns_match_rule))
         
     #add results to list
     if addr4: addrs.append(addr4)
@@ -211,7 +211,7 @@ def _build_event_type(event_type, summary_type, summary_window):
             return []
         else:
             #bad event type
-            raise BadRequest("Invalid event-type parameter {0}" % (e))
+            raise BadRequest("Invalid event-type parameter {0}".format(e))
     
     #now that we have test types, build the filter
     #this is imperfect because some events only present
