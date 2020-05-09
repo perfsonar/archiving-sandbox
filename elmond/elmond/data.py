@@ -46,6 +46,9 @@ DATA_FIELD_MAP = {
     "throughput-subintervals/base": "result.intervals.json",
     "time-error-estimates/base": "result.max_clock_error"
 }
+CONVERSION_FACTOR_MAP = {
+    "histogram-rtt": 1000 #convert rtt to ms
+}
 
 log = logging.getLogger('elmond')
 
@@ -59,7 +62,7 @@ def _calc_rollup_average(obj, key):
     
     return float(val)/count
     
-def _build_esmond_histogram(elastic_histo):
+def _build_esmond_histogram(elastic_histo, conversion_factor=1):
     values = elastic_histo.get("values", [])
     counts = elastic_histo.get("counts", [])
     #make sure same length
@@ -70,7 +73,7 @@ def _build_esmond_histogram(elastic_histo):
     esmond_histo = {}
     for i in range(num_buckets):
         try:
-            esmond_histo[str(values[i])] = int(counts[i])
+            esmond_histo[str(values[i]*conversion_factor)] = int(counts[i])
         except ValueError as e:
             return None
     
@@ -108,19 +111,19 @@ def _extract_result_field(key, result):
     
     return curr_field
 
-def _extract_result_stats(key, result, is_rollup=False):
+def _extract_result_stats(key, result, is_rollup=False, conversion_factor=1):
     if is_rollup:
         return {
-            "maximum": result.get("{0}.max.max.value".format(key), None),
-            "mean": _calc_rollup_average(result, "{0}.mean".format(key)),
-            "median": _calc_rollup_average(result, "{0}.median".format(key)),
-            "minimum": result.get("{0}.min.min.value".format(key), None),
-            "mode": [_calc_rollup_average(result, "{0}.mode".format(key))],
-            "percentile-25": _calc_rollup_average(result, "{0}.p_25".format(key)),
-            "percentile-75": _calc_rollup_average(result, "{0}.p_75".format(key)),
-            "percentile-95": _calc_rollup_average(result, "{0}.p_95".format(key)),
-            "standard-deviation": _calc_rollup_average(result, "{0}.stddev".format(key)),
-            "variance": _calc_rollup_average(result, "{0}.variance".format(key))
+            "maximum": result.get("{0}.max.max.value".format(key)*conversion_factor, None),
+            "mean": _calc_rollup_average(result, "{0}.mean".format(key))*conversion_factor,
+            "median": _calc_rollup_average(result, "{0}.median".format(key))*conversion_factor,
+            "minimum": result.get("{0}.min.min.value".format(key), None)*conversion_factor,
+            "mode": [_calc_rollup_average(result, "{0}.mode".format(key))*conversion_factor],
+            "percentile-25": _calc_rollup_average(result, "{0}.p_25".format(key))*conversion_factor,
+            "percentile-75": _calc_rollup_average(result, "{0}.p_75".format(key))*conversion_factor,
+            "percentile-95": _calc_rollup_average(result, "{0}.p_95".format(key))*conversion_factor,
+            "standard-deviation": _calc_rollup_average(result, "{0}.stddev".format(key))*conversion_factor,
+            "variance": _calc_rollup_average(result, "{0}.variance".format(key))*conversion_factor
         }
     else:
         field = _extract_result_field(key, result)
@@ -387,12 +390,14 @@ class EsmondData:
             if raw_type:
                 datum["val"] = result
             elif event_type.startswith("histogram-") and summary_type == "statistics":
-                datum["val"] = _extract_result_stats(DATA_FIELD_MAP[dfm_key], result, is_rollup=is_rollup)
+                conversion_factor = CONVERSION_FACTOR_MAP.get(event_type, 1)
+                datum["val"] = _extract_result_stats(DATA_FIELD_MAP[dfm_key], result, is_rollup=is_rollup, conversion_factor=conversion_factor)
             elif event_type.startswith("histogram-"):
+                conversion_factor = CONVERSION_FACTOR_MAP.get(event_type, 1)
                 hist = _extract_result_field(DATA_FIELD_MAP[dfm_key], result)
                 if not hist:
                     continue
-                datum["val"] = _build_esmond_histogram(hist)
+                datum["val"] = _build_esmond_histogram(hist, conversion_factor=conversion_factor)
             elif event_type.startswith("streams") and event_type.endswith("subintervals"):
                 datum["val"] = _extract_result_subintervals(DATA_FIELD_MAP[dfm_key], result, event_type, streams=True)
             elif event_type.startswith("streams"):
