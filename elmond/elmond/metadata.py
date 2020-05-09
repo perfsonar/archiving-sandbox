@@ -8,6 +8,15 @@ from util import *
 
 DEFAULT_RESULT_LIMIT=1000
 MAX_RESULT_LIMIT=10000
+#The following value is a bit of a hack. The terms aggregation returns the top 
+# 10 by default. When we use the terms aggregation on test_checksum we want it
+# over ALL tests and then we use a sorted_bucket aggregation to paginate. The
+# number below is an arbitrarily high number for the terms aggregation to make
+# sure we are paginating over all tests. If the number below is exceeded then
+# pagination won't work right. You can still get at the test, you'll just need
+# to filter down more. There is probably a more efficient way to do this using
+# a composite aggregation or similar.
+TERM_AGG_SIZE=999999 
 
 log = logging.getLogger('elmond')
 
@@ -99,7 +108,8 @@ class EsmondMetadata:
                 },
                 "tests" : {
                     "terms" : { 
-                      "field" : "pscheduler.test_checksum.keyword"
+                      "field" : "pscheduler.test_checksum.keyword",
+                      "size": TERM_AGG_SIZE
                     },
                     "aggs": {
                       "test_params": {
