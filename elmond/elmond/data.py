@@ -147,8 +147,7 @@ def _extract_result_stats(key, result, is_rollup=False, conversion_factor=1):
     for stat in stats:
         if stats[stat] is not None:
             if stat == "mode":
-                for m in stats[stat]:
-                    stats[stat] = float(stats[stat])*conversion_factor
+                stats[stat] = [float(m)*conversion_factor for m in stats[stat]]
             else:
                 stats[stat] = float(stats[stat])*conversion_factor
         
