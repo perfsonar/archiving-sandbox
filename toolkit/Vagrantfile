@@ -1,0 +1,121 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "toolkit-elk", primary: true, autostart: true do |ps|
+    # set box to official CentOS 7 image
+    ps.vm.box = "centos/7"
+    # explcitly set shared folder to virtualbox type. If not set will choose rsync 
+    # which is just a one-way share that is less useful in this context
+    ps.vm.synced_folder "..", "/vagrant", type: "virtualbox"
+    # Set hostname
+    ps.vm.hostname = "toolkit-elk"
+    
+    #increase memory
+    ps.vm.provider "virtualbox" do |v|
+        v.memory = 4096
+    end
+    
+    # Enable IPv4. Cannot be directly before or after line that sets IPv6 address. Looks
+    # to be a strange bug where IPv6 and IPv4 mixed-up by vagrant otherwise and one 
+    #interface will appear not to have an address. If you look at network-scripts file
+    # you will see a mangled result where IPv4 is set for IPv6 or vice versa
+    ps.vm.network "private_network", ip: "10.7.7.7"
+    
+    # Setup port forwarding to apache
+    ps.vm.network "forwarded_port", guest: 443, host: "7443", host_ip: "127.0.0.1"
+    
+    # Enable IPv6. Currently only supports setting via static IP. Address below in the
+    # reserved local address range for IPv6
+    ps.vm.network "private_network", ip: "fdac:218a:75e5:79c8::7"
+    
+    #Disable selinux
+    ps.vm.provision "shell", inline: <<-SHELL
+        sed -i s/SELINUX=enforcing/SELINUX=permissive/g /etc/selinux/config
+    SHELL
+
+    #Install all requirements and perform initial setup
+    ps.vm.provision "shell", inline: <<-SHELL
+        yum install -y epel-release yum-utils
+        yum install -y http://software.internet2.edu/rpms/el7/x86_64/4/packages/perfSONAR-repo-0.9-1.noarch.rpm 
+        rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        cp /vagrant/toolkit/files/elastic.repo /etc/yum.repos.d/elastic.repo
+        yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+        yum clean all
+        #Install a few things first including java for logstash
+        yum install -y \
+            gcc\
+            kernel-devel\
+            kernel-headers\
+            dkms\
+            make\
+            bzip2\
+            perfsonar-toolkit\
+            elasticsearch\
+            docker-ce\
+            docker-ce-cli\
+            java-11-openjdk
+
+        # Esmond installs an old java for cassandra. Use the newer version from 
+        # Elastic for logstash. Interstingly ElasticSearch ships with its own version
+        # of Java 13 that lives in /usr/share/elasticsearch/jdk
+        cp /vagrant/toolkit/files/java.sh /etc/profile.d/java.sh
+        source /etc/profile.d/java.sh
+        
+        #Use Java 11 or jruby script that setsup systemd scripts fails
+        JAVA_HOME=/usr/lib/jvm/jre-11 yum install -y logstash
+        
+        #Logstash needs Java 11 to install, but 13 that comes with elastic seems fine after that
+        echo "JAVA_HOME=/usr/share/elasticsearch/jdk" >> /etc/sysconfig/logstash
+        
+        #daemon reload
+        systemctl daemon-reload
+        
+        #Disable cassandra and esmond
+        systemctl stop cassandra
+        systemctl disable cassandra
+        rm /etc/httpd/conf.d/apache-esmond.conf
+        systemctl restart httpd
+        
+        #Enable docker
+        systemctl enable --now docker
+        curl -L https://github.com/docker/compose/releases/download/1.25.5/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+        chmod 755 /usr/local/bin/docker-compose
+        ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        
+        #build containers
+        cd /vagrant
+        /usr/bin/docker-compose -f docker-compose.build.yml build
+        
+        #CONFIGURE ELASTIC
+        systemctl enable --now elasticsearch.service
+        #TODO: DELETE BELOW WHEN WE DROP DOCKER, CAN JUST LISTEN ON LOCALHOST
+        ## Need this for 'production' mode (i.e. not listen on localhost) or won't work
+        echo 'discovery.seed_hosts: ["127.0.0.1", "[::1]"]' >> /etc/elasticsearch/elasticsearch.yml 
+        echo 'network.host: 0.0.0.0'  >> /etc/elasticsearch/elasticsearch.yml
+        systemctl restart elasticsearch.service
+
+        #CONFIGURE LOGSTASH
+        cp -r /vagrant/logstash_pipeline/* /etc/logstash/conf.d/
+        cp -f /vagrant/toolkit/files/01-inputs.conf /etc/logstash/conf.d/01-inputs.conf
+        cp -f /vagrant/toolkit/files/99-outputs.conf /etc/logstash/conf.d/99-outputs.conf
+        ## Probably a better way to do this, but symlink to match directory structure of docker
+        ln -s /etc/logstash/conf.d /usr/share/logstash/pipeline
+        #Enable and start logstash
+        systemctl enable --now logstash.service 
+        
+        #CONFIGURE DEFAULT ARCHIVER
+        cp /vagrant/toolkit/files/http_logstash.json /etc/pscheduler/default-archives/http_logstash.json
+        systemctl restart pscheduler-archiver
+        
+        #START DOCKER CONTAINERS
+        cd /vagrant/toolkit
+        /usr/bin/docker-compose -f docker-compose.toolkit.yml up -d
+        
+        #Configure httpd proxy
+        cp /vagrant/toolkit/files/apache-elmond.conf /etc/httpd/conf.d/apache-elmond.conf
+        systemctl restart httpd
+    SHELL
+  end
+end

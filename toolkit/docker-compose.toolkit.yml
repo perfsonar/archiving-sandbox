@@ -1,0 +1,15 @@
+version: '3.7'
+services:
+  pselastic_setup:
+    image: perfsonar/pselastic_setup:latest
+    env_file: .env
+    volumes:
+       - ../pselastic_setup:/app
+  elmond:
+    image: perfsonar/elmond:latest
+    env_file: .env
+    volumes:
+       - ../elmond/elmond:/app
+       - ./files:/etc/elmond
+    ports:
+      - "5000:5000"
