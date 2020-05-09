@@ -112,24 +112,25 @@ def _extract_result_field(key, result):
     return curr_field
 
 def _extract_result_stats(key, result, is_rollup=False, conversion_factor=1):
+    stats = {}
     if is_rollup:
-        return {
-            "maximum": result.get("{0}.max.max.value".format(key)*conversion_factor, None),
-            "mean": _calc_rollup_average(result, "{0}.mean".format(key))*conversion_factor,
-            "median": _calc_rollup_average(result, "{0}.median".format(key))*conversion_factor,
-            "minimum": result.get("{0}.min.min.value".format(key), None)*conversion_factor,
-            "mode": [_calc_rollup_average(result, "{0}.mode".format(key))*conversion_factor],
-            "percentile-25": _calc_rollup_average(result, "{0}.p_25".format(key))*conversion_factor,
-            "percentile-75": _calc_rollup_average(result, "{0}.p_75".format(key))*conversion_factor,
-            "percentile-95": _calc_rollup_average(result, "{0}.p_95".format(key))*conversion_factor,
-            "standard-deviation": _calc_rollup_average(result, "{0}.stddev".format(key))*conversion_factor,
-            "variance": _calc_rollup_average(result, "{0}.variance".format(key))*conversion_factor
+        stats = {
+            "maximum": result.get("{0}.max.max.value".format(key), None),
+            "mean": _calc_rollup_average(result, "{0}.mean".format(key)),
+            "median": _calc_rollup_average(result, "{0}.median".format(key)),
+            "minimum": result.get("{0}.min.min.value".format(key), None),
+            "mode": [_calc_rollup_average(result, "{0}.mode".format(key))],
+            "percentile-25": _calc_rollup_average(result, "{0}.p_25".format(key)),
+            "percentile-75": _calc_rollup_average(result, "{0}.p_75".format(key)),
+            "percentile-95": _calc_rollup_average(result, "{0}.p_95".format(key)),
+            "standard-deviation": _calc_rollup_average(result, "{0}.stddev".format(key)),
+            "variance": _calc_rollup_average(result, "{0}.variance".format(key))
         }
     else:
         field = _extract_result_field(key, result)
         if field is None:
             return None
-        return {
+        stats = {
             "maximum": field.get("max", None),
             "mean": field.get("mean", None),
             "median": field.get("median", None),
@@ -141,6 +142,13 @@ def _extract_result_stats(key, result, is_rollup=False, conversion_factor=1):
             "standard-deviation": field.get("stddev", None),
             "variance": field.get("variance", None)
         }
+    
+    #do any conversion as needed
+    for stat in stats:
+        if stats[stat] is not None:
+            stats[stat] = float(stats[stat])*conversion_factor
+        
+    return stats
 
 def _extract_result_subinterval(key, interval_obj):
     start = interval_obj.get("start", None)
