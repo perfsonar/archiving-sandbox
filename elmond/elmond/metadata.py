@@ -67,7 +67,7 @@ class EsmondMetadata:
             url_parts[2] = "{0}/{1}".format(url_parts[2], md_key)
         
         #remove any double slashes
-        url_parts[2] = url_parts[2].replace("//", "")
+        url_parts[2] = url_parts[2].replace("//", "/")
         
         return urlunparse(url_parts)
         
