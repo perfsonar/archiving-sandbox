@@ -51,8 +51,21 @@ class EsmondMetadata:
     def _get_md_url(self, request_url, md_key):
         url_parts = list(urlparse(request_url))
         url_parts[2] = re.sub(r'/$', "", url_parts[2])
+        
+        #handle proxied path
+        ec = app.config.get('ELMOND', {})
+        proxy_path = ec.get("PROXY_PATH", "")
+        if proxy_path:
+            url_parts[2] = "{0}/{1}".format(proxy_path, url_parts[2])
+        
+        #force https
+        if ec.get("FORCE_HTTPS_URLS", False):
+            url_parts[0] = "https"
+        
+        #add metadata key        
         if not url_parts[2].endswith(md_key):
             url_parts[2] = "{0}/{1}".format(url_parts[2], md_key)
+        
         return urlunparse(url_parts)
         
     def search(self, q=None, request_url=None, paginate=False):

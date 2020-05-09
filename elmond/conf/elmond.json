@@ -4,6 +4,7 @@
         "use_ssl": true
     },
     "#PROXY_PATH": "/esmond/perfsonar/archive",
+    "#FORCE_HTTPS_URLS": true,
     "#SUMMARIES": {
         "throughput": [
             {
