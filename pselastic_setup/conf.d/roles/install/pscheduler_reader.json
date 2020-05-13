@@ -1,7 +1,7 @@
 {
   "indices": [
     {
-      "names": [ "pscheduler_*" ], 
+      "names": [ "pscheduler_*", "rollup_pscheduler_*" ], 
       "privileges": ["read","view_index_metadata"]
     }
   ]

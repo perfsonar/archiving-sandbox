@@ -5,6 +5,7 @@ services:
     env_file: .env
     volumes:
        - ../pselastic_setup:/app
+       - /etc/perfsonar/elastic:/etc/perfsonar/elastic
   elmond:
     image: perfsonar/elmond:latest
     env_file: .env

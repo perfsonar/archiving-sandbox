@@ -71,7 +71,7 @@ class PSElasticUtil:
                             continue
                         
                         #Send the JSON to the target elastic URL
-                        r = http_method(url=url, json=policy)
+                        r = http_method(url=url, json=policy, auth=self.auth)
                         r.raise_for_status() #raise error if failed
                         self.log.info("resource={0} action={1}.end file={2} url={3} status={4} elastic_reponse={5}".format(self.resource, action, dir_entry.path, url, r.status_code, r.text))
                         
@@ -123,6 +123,10 @@ class PSElasticUtil:
         #check for URL environment variable
         if not args.elastic_url:
             args.elastic_url = os.environ.get('PSELASTIC_URL', DEFAULT_ELASTIC_URL)
+        
+        #check for login file environment variable
+        if not args.elastic_login_file:
+            args.elastic_login_file = os.environ.get('PSELASTIC_LOGIN_FILE', None)
             
         #Check if we are doing auth 
         self.auth = None
@@ -134,7 +138,7 @@ class PSElasticUtil:
             if creds:
                 self.auth = HTTPBasicAuth(creds[0], creds[1])
             else:
-                self.log.error("Unable to parse {}. Needs to be one line with username and password separated by single space.")
+                self.log.error("Unable to parse {0}. Needs to be one line with username and password separated by single space.".format(args.elastic_login_file))
                 sys.exit(1)
         elif os.environ.get('PSELASTIC_USER', None) and os.environ.get('PSELASTIC_PASS', None):
             self.auth = HTTPBasicAuth(os.environ.get('PSELASTIC_USER'), os.environ.get('PSELASTIC_PASS'))
@@ -153,6 +157,7 @@ class PSElasticUtil:
                 r.raise_for_status()
                 connected=True
             except:
+                self.log.error(r.text)
                 retry_str=" Last attempt."
                 if retries <= args.max_retries:
                     retry_str = " Will retry again in {0} second(s).".format(args.retry_wait)
