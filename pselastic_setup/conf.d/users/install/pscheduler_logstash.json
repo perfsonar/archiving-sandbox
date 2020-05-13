@@ -1,0 +1,4 @@
+{
+  "roles" : [ "pscheduler_logstash"],
+  "full_name" : "pScheduler Logstash User"
+}

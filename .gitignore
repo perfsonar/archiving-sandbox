@@ -3,4 +3,5 @@
 .*.swn
 .*.swo
 .*.swp
+.vagrant
 .env
