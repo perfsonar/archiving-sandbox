@@ -152,12 +152,14 @@ class PSElasticUtil:
         connected=False
         while retries <= args.max_retries and not connected:
             retries += 1
+            r=None
             try:
                 r = requests.get(url=args.elastic_url, auth=self.auth)
                 r.raise_for_status()
                 connected=True
             except:
-                self.log.error(r.text)
+                if r is not None:
+                    self.log.error(r.text)
                 retry_str=" Last attempt."
                 if retries <= args.max_retries:
                     retry_str = " Will retry again in {0} second(s).".format(args.retry_wait)
