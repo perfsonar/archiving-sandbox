@@ -12,3 +12,9 @@ services:
        build:
           context: pselastic_setup
           dockerfile: Dockerfile
+   grafana:         
+       image: perfsonar/grafana:latest
+       env_file: .env
+       build:
+          context: grafana
+          dockerfile: Dockerfile
