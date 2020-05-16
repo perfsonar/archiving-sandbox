@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1589506687024,
+  "iteration": 1589596977668,
   "links": [],
   "panels": [
     {
@@ -127,6 +127,12 @@
           "custom": {
             "align": "left"
           },
+          "links": [
+            {
+              "title": "",
+              "url": "/d/pjRZKAgMk/measurements-by-source-and-destination?orgId=1&var-source=${__data.fields[meta.source.hostname.keyword]}&var-dest=${__data.fields[meta.destination.hostname.keyword]}&from=${__from}&to=${__to}"
+            }
+          ],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -333,6 +339,7 @@
       },
       "id": 10,
       "interval": "1h",
+      "links": [],
       "options": {
         "angular": {
           "aliasColors": {},

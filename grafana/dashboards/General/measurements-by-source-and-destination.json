@@ -1,0 +1,949 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "iteration": 1589595646429,
+  "links": [],
+  "panels": [
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "pScheduler Throughput",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 2,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "connected",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.0.0-beta3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:226"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "{{term pscheduler.tool.keyword}} (TCP)",
+          "bucketAggs": [
+            {
+              "$$hashKey": "object:149",
+              "fake": true,
+              "field": "pscheduler.tool.keyword",
+              "id": "3",
+              "settings": {
+                "min_doc_count": 1,
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "$$hashKey": "object:39",
+              "field": "pscheduler.start_time",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "metrics": [
+            {
+              "$$hashKey": "object:37",
+              "field": "result.throughput",
+              "id": "1",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "(meta.source.hostname.keyword:$source) AND (meta.destination.hostname.keyword:$dest) AND (!test.spec.udp:true)",
+          "refId": "A",
+          "timeField": "pscheduler.start_time"
+        },
+        {
+          "alias": "{{term pscheduler.tool.keyword}} (UDP)",
+          "bucketAggs": [
+            {
+              "$$hashKey": "object:1214",
+              "fake": true,
+              "field": "pscheduler.tool.keyword",
+              "id": "3",
+              "settings": {
+                "min_doc_count": 1,
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "$$hashKey": "object:1198",
+              "field": "pscheduler.start_time",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "metrics": [
+            {
+              "$$hashKey": "object:1196",
+              "field": "result.throughput",
+              "id": "1",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "(meta.source.hostname.keyword:$source) AND (meta.destination.hostname.keyword:$dest) AND (test.spec.udp:true)",
+          "refId": "B",
+          "timeField": "pscheduler.start_time"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Throughput",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:58",
+          "format": "bps",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:59",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "pScheduler All",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "connected",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.0.0-beta3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:226"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "$$hashKey": "object:149",
+              "fake": true,
+              "field": "pscheduler.tool.keyword",
+              "id": "3",
+              "settings": {
+                "min_doc_count": 1,
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "$$hashKey": "object:39",
+              "field": "pscheduler.start_time",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "metrics": [
+            {
+              "$$hashKey": "object:37",
+              "field": "result.packets.loss",
+              "id": "1",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "(meta.source.hostname.keyword:$source) AND (meta.destination.hostname.keyword:$dest) AND (test.type:rtt OR latencybg OR latency)",
+          "refId": "A",
+          "timeField": "pscheduler.start_time"
+        },
+        {
+          "alias": "{{term pscheduler.tool.keyword}} (UDP)",
+          "bucketAggs": [
+            {
+              "$$hashKey": "object:848",
+              "fake": true,
+              "field": "pscheduler.tool.keyword",
+              "id": "5",
+              "settings": {
+                "min_doc_count": 1,
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "$$hashKey": "object:795",
+              "field": "pscheduler.start_time",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "metrics": [
+            {
+              "$$hashKey": "object:793",
+              "field": "result.packets_sent",
+              "hide": true,
+              "id": "1",
+              "meta": {},
+              "settings": {
+                "missing": 1
+              },
+              "type": "sum"
+            },
+            {
+              "$$hashKey": "object:811",
+              "field": "result.packets_lost",
+              "hide": true,
+              "id": "3",
+              "meta": {},
+              "settings": {},
+              "type": "sum"
+            },
+            {
+              "$$hashKey": "object:823",
+              "field": "select field",
+              "id": "4",
+              "meta": {},
+              "pipelineVariables": [
+                {
+                  "$$hashKey": "object:834",
+                  "name": "lost",
+                  "pipelineAgg": "3"
+                },
+                {
+                  "$$hashKey": "object:839",
+                  "name": "sent",
+                  "pipelineAgg": "1"
+                }
+              ],
+              "settings": {
+                "script": "params.lost / params.sent"
+              },
+              "type": "bucket_script"
+            }
+          ],
+          "query": "(meta.source.hostname.keyword:$source) AND (meta.destination.hostname.keyword:$dest) AND (test.type:throughput) AND (test.spec.udp:true)",
+          "refId": "B",
+          "timeField": "pscheduler.start_time"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Packet Loss",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:58",
+          "decimals": null,
+          "format": "percentunit",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:59",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "pScheduler All",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "hiddenSeries": false,
+      "id": 3,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "connected",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.0.0-beta3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:226"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "$$hashKey": "object:149",
+              "fake": true,
+              "field": "pscheduler.tool.keyword",
+              "id": "3",
+              "settings": {
+                "min_doc_count": 1,
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "$$hashKey": "object:39",
+              "field": "pscheduler.start_time",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "metrics": [
+            {
+              "$$hashKey": "object:37",
+              "field": "result.latency.min",
+              "id": "1",
+              "meta": {},
+              "settings": {},
+              "type": "min"
+            }
+          ],
+          "query": "(meta.source.hostname.keyword:$source) AND (meta.destination.hostname.keyword:$dest) AND (test.type:latencybg OR latency)",
+          "refId": "A",
+          "timeField": "pscheduler.start_time"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Latency (One-way)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:58",
+          "format": "ms",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:59",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "pScheduler RTT",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "hiddenSeries": false,
+      "id": 5,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "connected",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pluginVersion": "7.0.0-beta3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:226"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "$$hashKey": "object:149",
+              "fake": true,
+              "field": "pscheduler.tool.keyword",
+              "id": "3",
+              "settings": {
+                "min_doc_count": 1,
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "$$hashKey": "object:39",
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "metrics": [
+            {
+              "$$hashKey": "object:37",
+              "field": "result.rtt.min",
+              "id": "1",
+              "meta": {},
+              "settings": {},
+              "type": "min"
+            }
+          ],
+          "query": "(meta.source.hostname.keyword:$source) AND (meta.destination.hostname.keyword:$dest) AND (test.type:rtt)",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Round Trip Time",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [],
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:58",
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:59",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "schemaVersion": 25,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "ps-dev-el7-2.es.net",
+          "value": "ps-dev-el7-2.es.net"
+        },
+        "datasource": "pScheduler All",
+        "definition": "{\"find\":\"terms\", \"field\":\"meta.source.hostname.keyword\", \"size\": 100000} ",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Source",
+        "multi": false,
+        "name": "source",
+        "options": [
+          {
+            "selected": true,
+            "text": "ps-dev-el7-2.es.net",
+            "value": "ps-dev-el7-2.es.net"
+          }
+        ],
+        "query": "{\"find\":\"terms\", \"field\":\"meta.source.hostname.keyword\", \"size\": 100000} ",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": "ps-stretch.qalab.geant.net",
+          "value": "ps-stretch.qalab.geant.net"
+        },
+        "datasource": "pScheduler All",
+        "definition": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"size\": 100000} ",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Destination",
+        "multi": false,
+        "name": "dest",
+        "options": [
+          {
+            "selected": false,
+            "text": "dhcp-150-254-208-80.qalab.geant.net",
+            "value": "dhcp-150-254-208-80.qalab.geant.net"
+          },
+          {
+            "selected": false,
+            "text": "dhcp-150-254-208-84.qalab.geant.net",
+            "value": "dhcp-150-254-208-84.qalab.geant.net"
+          },
+          {
+            "selected": false,
+            "text": "perfsonar-dc-macc-10ge.umnet.umich.edu",
+            "value": "perfsonar-dc-macc-10ge.umnet.umich.edu"
+          },
+          {
+            "selected": false,
+            "text": "perfsonar-dev.grnoc.iu.edu",
+            "value": "perfsonar-dev.grnoc.iu.edu"
+          },
+          {
+            "selected": false,
+            "text": "perfsonar-dev10-esmond.grnoc.iu.edu",
+            "value": "perfsonar-dev10-esmond.grnoc.iu.edu"
+          },
+          {
+            "selected": false,
+            "text": "perfsonar-dev8.grnoc.iu.edu",
+            "value": "perfsonar-dev8.grnoc.iu.edu"
+          },
+          {
+            "selected": false,
+            "text": "perfsonar-dev9.grnoc.iu.edu",
+            "value": "perfsonar-dev9.grnoc.iu.edu"
+          },
+          {
+            "selected": false,
+            "text": "perfsonar-stage1.grnoc.iu.edu",
+            "value": "perfsonar-stage1.grnoc.iu.edu"
+          },
+          {
+            "selected": false,
+            "text": "perfsonar-stage2.grnoc.iu.edu",
+            "value": "perfsonar-stage2.grnoc.iu.edu"
+          },
+          {
+            "selected": false,
+            "text": "ps-bionic.qalab.geant.net",
+            "value": "ps-bionic.qalab.geant.net"
+          },
+          {
+            "selected": false,
+            "text": "ps-dev-docker-1.es.net",
+            "value": "ps-dev-docker-1.es.net"
+          },
+          {
+            "selected": true,
+            "text": "ps-dev-el7-1.es.net",
+            "value": "ps-dev-el7-1.es.net"
+          },
+          {
+            "selected": false,
+            "text": "ps-stretch.qalab.geant.net",
+            "value": "ps-stretch.qalab.geant.net"
+          },
+          {
+            "selected": false,
+            "text": "pstest2.geant.CARNet.hr",
+            "value": "pstest2.geant.CARNet.hr"
+          },
+          {
+            "selected": false,
+            "text": "t2-psdev.rrze.uni-erlangen.de",
+            "value": "t2-psdev.rrze.uni-erlangen.de"
+          },
+          {
+            "selected": false,
+            "text": "tb-el7-minor-dr.ps.dev.internet2.edu",
+            "value": "tb-el7-minor-dr.ps.dev.internet2.edu"
+          },
+          {
+            "selected": false,
+            "text": "tb-el7-minor.ps.dev.internet2.edu",
+            "value": "tb-el7-minor.ps.dev.internet2.edu"
+          },
+          {
+            "selected": false,
+            "text": "tb-el7-patch-dr.ps.dev.internet2.edu",
+            "value": "tb-el7-patch-dr.ps.dev.internet2.edu"
+          },
+          {
+            "selected": false,
+            "text": "tb-el7-patch.ps.dev.internet2.edu",
+            "value": "tb-el7-patch.ps.dev.internet2.edu"
+          },
+          {
+            "selected": false,
+            "text": "tb-el7-prod-dr.ps.dev.internet2.edu",
+            "value": "tb-el7-prod-dr.ps.dev.internet2.edu"
+          },
+          {
+            "selected": false,
+            "text": "tb-el7-prod.ps.dev.internet2.edu",
+            "value": "tb-el7-prod.ps.dev.internet2.edu"
+          }
+        ],
+        "query": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"size\": 100000} ",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "Measurements by Source and Destination",
+  "uid": "pjRZKAgMk"
+}
