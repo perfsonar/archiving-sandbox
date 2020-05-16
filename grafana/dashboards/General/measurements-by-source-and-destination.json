@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1589595646429,
+  "iteration": 1589598407058,
   "links": [],
   "panels": [
     {
@@ -800,7 +800,7 @@
           "value": "ps-stretch.qalab.geant.net"
         },
         "datasource": "pScheduler All",
-        "definition": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"size\": 100000} ",
+        "definition": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"query\": \"meta.source.hostname.keyword:$source\",  \"size\": 100000} ",
         "hide": 0,
         "includeAll": false,
         "label": "Destination",
@@ -863,12 +863,12 @@
             "value": "ps-dev-docker-1.es.net"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "ps-dev-el7-1.es.net",
             "value": "ps-dev-el7-1.es.net"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "ps-stretch.qalab.geant.net",
             "value": "ps-stretch.qalab.geant.net"
           },
@@ -913,7 +913,7 @@
             "value": "tb-el7-prod.ps.dev.internet2.edu"
           }
         ],
-        "query": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"size\": 100000} ",
+        "query": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"query\": \"meta.source.hostname.keyword:$source\",  \"size\": 100000} ",
         "refresh": 0,
         "regex": "",
         "skipUrlSync": false,
