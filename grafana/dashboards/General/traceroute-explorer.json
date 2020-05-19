@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1589596977668,
+  "iteration": 1589856499614,
   "links": [],
   "panels": [
     {
@@ -127,12 +127,7 @@
           "custom": {
             "align": "left"
           },
-          "links": [
-            {
-              "title": "",
-              "url": "/d/pjRZKAgMk/measurements-by-source-and-destination?orgId=1&var-source=${__data.fields[meta.source.hostname.keyword]}&var-dest=${__data.fields[meta.destination.hostname.keyword]}&from=${__from}&to=${__to}"
-            }
-          ],
+          "links": [],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -314,6 +309,15 @@
               {
                 "id": "custom.width",
                 "value": 262
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "",
+                    "url": "/d/pjRZKAgMk/measurements-by-source-and-destination?orgId=1&var-source=${__data.fields[Source]}&var-dest=${__data.fields[Destination]}&to=${__to}&from=${__from}"
+                  }
+                ]
               }
             ]
           },
@@ -326,6 +330,15 @@
               {
                 "id": "custom.width",
                 "value": 214
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "",
+                    "url": "/d/pjRZKAgMk/measurements-by-source-and-destination?orgId=1&var-source=${__data.fields[Source]}&var-dest=${__data.fields[Destination]}&to=${__to}&from=${__from}"
+                  }
+                ]
               }
             ]
           }
@@ -412,7 +425,7 @@
         "frameIndex": 1,
         "showHeader": true
       },
-      "pluginVersion": "7.0.0-beta3",
+      "pluginVersion": "7.0.0",
       "targets": [
         {
           "bucketAggs": [
@@ -762,7 +775,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
