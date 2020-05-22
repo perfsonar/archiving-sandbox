@@ -48,6 +48,8 @@ def get_ips(address)
                 #result['hostname_v4'] = ai[2]
             elsif ai[0] == 'AF_INET6' then
                 result['ipv6'] = ai[3]
+                #remove scope id since not compatible with elastic ip type
+                result['ipv6'] = result['ipv6'].gsub(/%\d+?/,"")
                 #result['hostname_v6'] = ai[2]
             end
         end
