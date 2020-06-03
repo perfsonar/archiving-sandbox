@@ -20,7 +20,7 @@ if [ $? -eq 0 ]; then
 else
     #clear out any old settings
     sed -i '/^xpack.security.*/d' $ELASTIC_CONFIG_FILE
-    sed -i '/^.*+anonymous:.*/d' $ELASTIC_CONFIG_FILE
+    sed -i '/^.*anonymous:.*/d' $ELASTIC_CONFIG_FILE
     sed -i '/^.*roles:.*/d' $ELASTIC_CONFIG_FILE
     sed -i '/^.*authz_exception:.*/d' $ELASTIC_CONFIG_FILE
     #TODO: DELETE BELOW WHEN WE DROP DOCKER, CAN JUST LISTEN ON LOCALHOST
