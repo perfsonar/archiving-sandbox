@@ -7,11 +7,12 @@
   "url": "https://ps-dev-archive2.es.net/elastic",
   "password": "",
   "user": "",
-  "database": "pscheduler_throughput-*",
+  "database": "[pscheduler_throughput-]YYYY.MM.DD",
   "basicAuth": false,
   "isDefault": true,
   "jsonData": {
     "esVersion": 70,
+    "interval": "Daily",
     "logLevelField": "",
     "logMessageField": "",
     "maxConcurrentShardRequests": 5,

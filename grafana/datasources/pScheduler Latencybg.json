@@ -7,11 +7,12 @@
   "url": "https://ps-dev-archive2.es.net/elastic",
   "password": "",
   "user": "",
-  "database": "pscheduler_latencybg-*",
+  "database": "[pscheduler_latencybg-]YYYY.MM.DD",
   "basicAuth": false,
   "isDefault": false,
   "jsonData": {
     "esVersion": 70,
+    "interval": "Daily",
     "logLevelField": "",
     "logMessageField": "",
     "maxConcurrentShardRequests": 5,
