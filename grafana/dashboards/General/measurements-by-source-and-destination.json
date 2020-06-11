@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1589598407058,
+  "iteration": 1591841209034,
   "links": [],
   "panels": [
     {
@@ -755,6 +755,7 @@
       }
     }
   ],
+  "refresh": false,
   "schemaVersion": 25,
   "style": "dark",
   "tags": [],
@@ -774,15 +775,9 @@
         "label": "Source",
         "multi": false,
         "name": "source",
-        "options": [
-          {
-            "selected": true,
-            "text": "ps-dev-el7-2.es.net",
-            "value": "ps-dev-el7-2.es.net"
-          }
-        ],
+        "options": [],
         "query": "{\"find\":\"terms\", \"field\":\"meta.source.hostname.keyword\", \"size\": 100000} ",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -806,115 +801,9 @@
         "label": "Destination",
         "multi": false,
         "name": "dest",
-        "options": [
-          {
-            "selected": false,
-            "text": "dhcp-150-254-208-80.qalab.geant.net",
-            "value": "dhcp-150-254-208-80.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "dhcp-150-254-208-84.qalab.geant.net",
-            "value": "dhcp-150-254-208-84.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dc-macc-10ge.umnet.umich.edu",
-            "value": "perfsonar-dc-macc-10ge.umnet.umich.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev.grnoc.iu.edu",
-            "value": "perfsonar-dev.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev10-esmond.grnoc.iu.edu",
-            "value": "perfsonar-dev10-esmond.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev8.grnoc.iu.edu",
-            "value": "perfsonar-dev8.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev9.grnoc.iu.edu",
-            "value": "perfsonar-dev9.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-stage1.grnoc.iu.edu",
-            "value": "perfsonar-stage1.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-stage2.grnoc.iu.edu",
-            "value": "perfsonar-stage2.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "ps-bionic.qalab.geant.net",
-            "value": "ps-bionic.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "ps-dev-docker-1.es.net",
-            "value": "ps-dev-docker-1.es.net"
-          },
-          {
-            "selected": false,
-            "text": "ps-dev-el7-1.es.net",
-            "value": "ps-dev-el7-1.es.net"
-          },
-          {
-            "selected": true,
-            "text": "ps-stretch.qalab.geant.net",
-            "value": "ps-stretch.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "pstest2.geant.CARNet.hr",
-            "value": "pstest2.geant.CARNet.hr"
-          },
-          {
-            "selected": false,
-            "text": "t2-psdev.rrze.uni-erlangen.de",
-            "value": "t2-psdev.rrze.uni-erlangen.de"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-minor-dr.ps.dev.internet2.edu",
-            "value": "tb-el7-minor-dr.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-minor.ps.dev.internet2.edu",
-            "value": "tb-el7-minor.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-patch-dr.ps.dev.internet2.edu",
-            "value": "tb-el7-patch-dr.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-patch.ps.dev.internet2.edu",
-            "value": "tb-el7-patch.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-prod-dr.ps.dev.internet2.edu",
-            "value": "tb-el7-prod-dr.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-prod.ps.dev.internet2.edu",
-            "value": "tb-el7-prod.ps.dev.internet2.edu"
-          }
-        ],
+        "options": [],
         "query": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"query\": \"meta.source.hostname.keyword:$source\",  \"size\": 100000} ",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,

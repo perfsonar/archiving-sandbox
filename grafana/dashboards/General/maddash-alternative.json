@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1589600872282,
+  "iteration": 1591841035421,
   "links": [],
   "panels": [
     {
@@ -32,16 +32,16 @@
       "repeat": "source",
       "scopedVars": {
         "source": {
-          "selected": true,
-          "text": "ps-dev-el7-2.es.net",
-          "value": "ps-dev-el7-2.es.net"
+          "selected": false,
+          "text": "ps-dev-docker-1.es.net",
+          "value": "ps-dev-docker-1.es.net"
         }
       },
       "title": "$source",
       "type": "row"
     },
     {
-      "datasource": null,
+      "datasource": "pScheduler Throughput",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -85,33 +85,26 @@
           },
           "unit": "bps"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName"
-            },
-            "properties": []
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 15,
+        "w": 24,
         "x": 0,
         "y": 1
       },
       "id": 10,
-      "interval": "72h",
+      "interval": "365d",
       "maxDataPoints": 1,
       "options": {
         "showHeader": true
       },
-      "pluginVersion": "7.0.0-beta3",
+      "pluginVersion": "7.0.0",
       "scopedVars": {
         "source": {
-          "selected": true,
-          "text": "ps-dev-el7-2.es.net",
-          "value": "ps-dev-el7-2.es.net"
+          "selected": false,
+          "text": "ps-dev-docker-1.es.net",
+          "value": "ps-dev-docker-1.es.net"
         }
       },
       "targets": [
@@ -124,9 +117,9 @@
               "id": "3",
               "settings": {
                 "min_doc_count": 0,
-                "order": "desc",
+                "order": "asc",
                 "orderBy": "_term",
-                "size": "10"
+                "size": "0"
               },
               "type": "terms"
             },
@@ -152,7 +145,166 @@
               "type": "avg"
             }
           ],
-          "query": "meta.source.hostname.keyword:$source",
+          "query": "(meta.source.hostname.keyword:$source) AND (!test.spec.udp:true)",
+          "refId": "A",
+          "timeField": "pscheduler.start_time"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "",
+      "transformations": [
+        {
+          "id": "seriesToColumns",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 11,
+      "panels": [],
+      "repeat": null,
+      "repeatIteration": 1591841035421,
+      "repeatPanelId": 7,
+      "scopedVars": {
+        "source": {
+          "selected": false,
+          "text": "ps-dev-el7-1.es.net",
+          "value": "ps-dev-el7-1.es.net"
+        }
+      },
+      "title": "$source",
+      "type": "row"
+    },
+    {
+      "datasource": "pScheduler Throughput",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center",
+            "displayMode": "color-background",
+            "width": 100
+          },
+          "mappings": [
+            {
+              "from": "-10",
+              "id": 0,
+              "operator": "",
+              "text": "No tests",
+              "to": "0",
+              "type": 2,
+              "value": "-1"
+            }
+          ],
+          "noValue": "No tests",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-orange",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 100000000
+              },
+              {
+                "color": "dark-green",
+                "value": 500000000
+              }
+            ]
+          },
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 12,
+      "interval": "48h",
+      "maxDataPoints": 1,
+      "options": {
+        "showHeader": true
+      },
+      "pluginVersion": "7.0.0",
+      "repeatIteration": 1591841035421,
+      "repeatPanelId": 10,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "source": {
+          "selected": false,
+          "text": "ps-dev-el7-1.es.net",
+          "value": "ps-dev-el7-1.es.net"
+        }
+      },
+      "targets": [
+        {
+          "bucketAggs": [
+            {
+              "$$hashKey": "object:708",
+              "fake": true,
+              "field": "meta.destination.hostname.keyword",
+              "id": "3",
+              "settings": {
+                "min_doc_count": 0,
+                "order": "asc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "$$hashKey": "object:600",
+              "field": "pscheduler.start_time",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": 0,
+                "trimEdges": 0
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "metrics": [
+            {
+              "$$hashKey": "object:598",
+              "field": "result.throughput",
+              "id": "1",
+              "meta": {},
+              "settings": {},
+              "type": "avg"
+            }
+          ],
+          "query": "(meta.source.hostname.keyword:$source) AND (!test.spec.udp:true)",
           "refId": "A",
           "timeField": "pscheduler.start_time"
         }
@@ -188,26 +340,23 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": "ps-dev-el7-2.es.net",
-          "value": "ps-dev-el7-2.es.net"
+          "selected": true,
+          "tags": [],
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
         },
         "datasource": "pScheduler Throughput",
         "definition": "{\"find\":\"terms\", \"field\":\"meta.source.hostname.keyword\", \"size\": 100000} ",
-        "hide": 1,
-        "includeAll": false,
+        "hide": 0,
+        "includeAll": true,
         "label": "Source",
-        "multi": false,
+        "multi": true,
         "name": "source",
-        "options": [
-          {
-            "selected": true,
-            "text": "ps-dev-el7-2.es.net",
-            "value": "ps-dev-el7-2.es.net"
-          }
-        ],
+        "options": [],
         "query": "{\"find\":\"terms\", \"field\":\"meta.source.hostname.keyword\", \"size\": 100000} ",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 5,
@@ -218,87 +367,24 @@
         "useTags": false
       },
       {
-        "allValue": "*",
+        "allValue": "",
         "current": {
-          "selected": true,
-          "tags": [],
-          "text": "perfsonar-dc-macc-10ge.umnet.umich.edu + perfsonar-dev8.grnoc.iu.edu",
+          "selected": false,
+          "text": "All",
           "value": [
-            "perfsonar-dc-macc-10ge.umnet.umich.edu",
-            "perfsonar-dev8.grnoc.iu.edu"
+            "$__all"
           ]
         },
         "datasource": "pScheduler Throughput",
         "definition": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"size\": 100000} ",
-        "hide": 1,
+        "hide": 2,
         "includeAll": true,
         "label": "Destination",
         "multi": true,
         "name": "dest",
-        "options": [
-          {
-            "selected": false,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "dhcp-150-254-208-84.qalab.geant.net",
-            "value": "dhcp-150-254-208-84.qalab.geant.net"
-          },
-          {
-            "selected": true,
-            "text": "perfsonar-dc-macc-10ge.umnet.umich.edu",
-            "value": "perfsonar-dc-macc-10ge.umnet.umich.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev.grnoc.iu.edu",
-            "value": "perfsonar-dev.grnoc.iu.edu"
-          },
-          {
-            "selected": true,
-            "text": "perfsonar-dev8.grnoc.iu.edu",
-            "value": "perfsonar-dev8.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev9.grnoc.iu.edu",
-            "value": "perfsonar-dev9.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "ps-dev-el7-1.es.net",
-            "value": "ps-dev-el7-1.es.net"
-          },
-          {
-            "selected": false,
-            "text": "ps-stretch.qalab.geant.net",
-            "value": "ps-stretch.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "t2-psdev.rrze.uni-erlangen.de",
-            "value": "t2-psdev.rrze.uni-erlangen.de"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-minor.ps.dev.internet2.edu",
-            "value": "tb-el7-minor.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-patch.ps.dev.internet2.edu",
-            "value": "tb-el7-patch.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-prod.ps.dev.internet2.edu",
-            "value": "tb-el7-prod.ps.dev.internet2.edu"
-          }
-        ],
+        "options": [],
         "query": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"size\": 100000} ",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 5,
