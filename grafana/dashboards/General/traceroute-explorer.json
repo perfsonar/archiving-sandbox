@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1589856499614,
+  "iteration": 1591840399771,
   "links": [],
   "panels": [
     {
@@ -531,75 +531,9 @@
         "label": "Organization on Path",
         "multi": true,
         "name": "org",
-        "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "DFN Verein zur Foerderung eines Deutschen Forschungsnetzes e.V., DE",
-            "value": "DFN Verein zur Foerderung eines Deutschen Forschungsnetzes e.V., DE"
-          },
-          {
-            "selected": false,
-            "text": "ESNET, US",
-            "value": "ESNET, US"
-          },
-          {
-            "selected": false,
-            "text": "ESNET-WEST, US",
-            "value": "ESNET-WEST, US"
-          },
-          {
-            "selected": false,
-            "text": "GEANT The GEANT IP Service, EU",
-            "value": "GEANT The GEANT IP Service, EU"
-          },
-          {
-            "selected": false,
-            "text": "INDIANA-AS, US",
-            "value": "INDIANA-AS, US"
-          },
-          {
-            "selected": false,
-            "text": "INDIANAGIGAPOP, US",
-            "value": "INDIANAGIGAPOP, US"
-          },
-          {
-            "selected": false,
-            "text": "INTERNET2-RESEARCH-EDU, US",
-            "value": "INTERNET2-RESEARCH-EDU, US"
-          },
-          {
-            "selected": false,
-            "text": "MERIT-AS-14, US",
-            "value": "MERIT-AS-14, US"
-          },
-          {
-            "selected": false,
-            "text": "NORDUNET, NO",
-            "value": "NORDUNET, NO"
-          },
-          {
-            "selected": false,
-            "text": "PIONIER-AS PIONIER, National Research and Education Network in Poland, PL",
-            "value": "PIONIER-AS PIONIER, National Research and Education Network in Poland, PL"
-          },
-          {
-            "selected": false,
-            "text": "POZMAN POZMAN-EDU, PL",
-            "value": "POZMAN POZMAN-EDU, PL"
-          },
-          {
-            "selected": false,
-            "text": "UMICH-AS-5, US",
-            "value": "UMICH-AS-5, US"
-          }
-        ],
+        "options": [],
         "query": "{\"find\":\"terms\", \"field\":\"result.hop.as_organization.keyword\", \"size\": 100000} ",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -625,20 +559,9 @@
         "label": "Source",
         "multi": true,
         "name": "source",
-        "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "ps-dev-el7-2.es.net",
-            "value": "ps-dev-el7-2.es.net"
-          }
-        ],
+        "options": [],
         "query": "{\"find\":\"terms\", \"field\":\"meta.source.hostname.keyword\", \"query\": \"result.hop.as_organization.keyword: $org\", \"size\": 100000} ",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -664,105 +587,9 @@
         "label": "Destination",
         "multi": true,
         "name": "dest",
-        "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "dhcp-150-254-208-80.qalab.geant.net",
-            "value": "dhcp-150-254-208-80.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "dhcp-150-254-208-84.qalab.geant.net",
-            "value": "dhcp-150-254-208-84.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dc-macc-10ge.umnet.umich.edu",
-            "value": "perfsonar-dc-macc-10ge.umnet.umich.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev.grnoc.iu.edu",
-            "value": "perfsonar-dev.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev10-esmond.grnoc.iu.edu",
-            "value": "perfsonar-dev10-esmond.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "perfsonar-dev9.grnoc.iu.edu",
-            "value": "perfsonar-dev9.grnoc.iu.edu"
-          },
-          {
-            "selected": false,
-            "text": "ps-bionic.qalab.geant.net",
-            "value": "ps-bionic.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "ps-dev-docker-1.es.net",
-            "value": "ps-dev-docker-1.es.net"
-          },
-          {
-            "selected": false,
-            "text": "ps-dev-el7-1.es.net",
-            "value": "ps-dev-el7-1.es.net"
-          },
-          {
-            "selected": false,
-            "text": "ps-stretch.qalab.geant.net",
-            "value": "ps-stretch.qalab.geant.net"
-          },
-          {
-            "selected": false,
-            "text": "pstest2.geant.CARNet.hr",
-            "value": "pstest2.geant.CARNet.hr"
-          },
-          {
-            "selected": false,
-            "text": "t2-psdev.rrze.uni-erlangen.de",
-            "value": "t2-psdev.rrze.uni-erlangen.de"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-minor-dr.ps.dev.internet2.edu",
-            "value": "tb-el7-minor-dr.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-minor.ps.dev.internet2.edu",
-            "value": "tb-el7-minor.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-patch-dr.ps.dev.internet2.edu",
-            "value": "tb-el7-patch-dr.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-patch.ps.dev.internet2.edu",
-            "value": "tb-el7-patch.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-prod-dr.ps.dev.internet2.edu",
-            "value": "tb-el7-prod-dr.ps.dev.internet2.edu"
-          },
-          {
-            "selected": false,
-            "text": "tb-el7-prod.ps.dev.internet2.edu",
-            "value": "tb-el7-prod.ps.dev.internet2.edu"
-          }
-        ],
+        "options": [],
         "query": "{\"find\":\"terms\", \"field\":\"meta.destination.hostname.keyword\", \"query\": \"result.hop.as_organization.keyword: $org\", \"size\": 100000} ",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,

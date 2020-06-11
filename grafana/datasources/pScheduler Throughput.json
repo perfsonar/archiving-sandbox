@@ -4,7 +4,7 @@
   "type": "elasticsearch",
   "typeLogoUrl": "public/app/plugins/datasource/elasticsearch/img/elasticsearch.svg",
   "access": "proxy",
-  "url": "http://ps-dev-el7-2.es.net/elastic",
+  "url": "https://ps-dev-archive2.es.net/elastic",
   "password": "",
   "user": "",
   "database": "pscheduler_throughput-*",
@@ -16,7 +16,8 @@
     "logMessageField": "",
     "maxConcurrentShardRequests": 5,
     "timeField": "pscheduler.start_time",
-    "timeInterval": "1h"
+    "timeInterval": "1h",
+    "tlsSkipVerify": true
   },
   "readOnly": false
 }
