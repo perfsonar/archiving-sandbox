@@ -130,7 +130,11 @@ end
 def filter(event)
     source = parse_endpoint(event.get("[test][spec][source]"))
     dest = parse_endpoint(event.get("[test][spec][dest]"))
-    observer = parse_endpoint(event.get("[pscheduler][task_href]"))
+    observer = event.get("[@metadata][ps_observer]")
+    if not observer then
+        observer = parse_endpoint(event.get("[pscheduler][task_href]"))
+    end
+    
     ipversion = event.get("[test][spec][ip-version]")
 
     #handle observer
