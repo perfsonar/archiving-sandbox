@@ -1,7 +1,12 @@
-ARG GRAFANA_VERSION="7.0.0"
+FROM grafana/grafana:7.0.6-ubuntu 
+# SEE BELOW!
+
+# ISSUE
+# https://github.com/grafana/grafana/issues/14835
+
+ARG GRAFANA_VERSION="7.0.6"
 ARG WIZZY_VERSION="0.7.0"
 
-FROM grafana/grafana:${GRAFANA_VERSION}-ubuntu
 
 #Install wizzy
 USER root
