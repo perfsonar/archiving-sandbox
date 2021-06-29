@@ -38,11 +38,11 @@ Vagrant.configure("2") do |config|
     #Install all requirements and perform initial setup
     ps.vm.provision "shell", inline: <<-SHELL
         yum install -y epel-release yum-utils
-        yum install -y http://software.internet2.edu/rpms/el7/x86_64/4/packages/perfSONAR-repo-0.9-1.noarch.rpm 
-        rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
-        cp /vagrant/toolkit/files/elastic.repo /etc/yum.repos.d/elastic.repo
+        yum install -y http://software.internet2.edu/rpms/el7/x86_64/4/packages/perfSONAR-repo-0.10-1.noarch.rpm
         yum-config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
         yum clean all
+        # Add Opendistro repository
+        curl https://d3g5vo6xdbdb9a.cloudfront.net/yum/opendistroforelasticsearch-artifacts.repo -o /etc/yum.repos.d/opendistroforelasticsearch-artifacts.repo
         #Install a few things first including java for logstash
         yum install -y \
             gcc\
@@ -54,9 +54,10 @@ Vagrant.configure("2") do |config|
             perfsonar-toolkit\
             python3 \
             python3-requests\
-            elasticsearch\
+            opendistroforelasticsearch \
+            opendistroforelasticsearch-kibana \
             docker-ce\
-            docker-ce-cli\
+            docker-ce-cli \
             java-11-openjdk
 
         # Esmond installs an old java for cassandra. Use the newer version from 
@@ -64,13 +65,13 @@ Vagrant.configure("2") do |config|
         # of Java 13 that lives in /usr/share/elasticsearch/jdk
         cp /vagrant/toolkit/files/java.sh /etc/profile.d/java.sh
         source /etc/profile.d/java.sh
-        
-        #Use Java 11 or jruby script that setsup systemd scripts fails
-        JAVA_HOME=/usr/lib/jvm/jre-11 yum install -y logstash
-        
-        #Logstash needs Java 11 to install, but 13 that comes with elastic seems fine after that
-        echo "JAVA_HOME=/usr/share/elasticsearch/jdk" >> /etc/sysconfig/logstash
-        
+
+        # Install logstash-oss v7.12
+        sudo rpm -i https://artifacts.elastic.co/downloads/logstash/logstash-oss-7.12.1-x86_64.rpm
+ 
+        # Set logstash variable
+        echo "XPACK_MONITORING_ENABLED=false" >> /etc/sysconfig/logstash
+
         #daemon reload
         systemctl daemon-reload
         
@@ -88,29 +89,35 @@ Vagrant.configure("2") do |config|
         
         #build containers
         cd /vagrant
-        /usr/bin/docker-compose -f docker-compose.build.yml build
+        # /usr/bin/docker-compose -f docker-compose.build.yml build
         
-        #CONFIGURE ELASTIC
+        #CONFIGURE OPENDISTRO
         systemctl enable --now elasticsearch.service
         /vagrant/toolkit/scripts/pselastic_secure.sh
         
-        
         #CONFIGURE LOGSTASH
+        /usr/share/logstash/bin/system-install /etc/logstash/startup.options systemd
         cp -r /vagrant/logstash_pipeline/* /etc/logstash/conf.d/
         cp -f /vagrant/toolkit/files/01-inputs.conf /etc/logstash/conf.d/01-inputs.conf
         cp -f /vagrant/toolkit/files/99-outputs.conf /etc/logstash/conf.d/99-outputs.conf
         ## Probably a better way to do this, but symlink to match directory structure of docker
         ln -s /etc/logstash/conf.d /usr/share/logstash/pipeline
+
         #Enable and start logstash
-        systemctl enable --now logstash.service 
+        systemctl enable --now logstash.service
+
+        #CONFIGURE KIBANA FOR OPENDISTRO
+        KIBANA_PASS=$(grep "kibanaserver " /etc/perfsonar/elastic/auth_setup.out | head -n 1 | sed 's/^kibanaserver //')
+        sed -i "s/elasticsearch.password: kibanaserver/elasticsearch.password: ${KIBANA_PASS}/g" /etc/kibana/kibana.yml
+        systemctl enable --now kibana.service
         
         #CONFIGURE DEFAULT ARCHIVER
         cp /vagrant/toolkit/files/http_logstash.json /etc/pscheduler/default-archives/http_logstash.json
         systemctl restart pscheduler-archiver
         
         #START DOCKER CONTAINERS
-        cd /vagrant/toolkit
-        /usr/bin/docker-compose -f docker-compose.toolkit.yml up -d
+        #cd /vagrant/toolkit
+        #/usr/bin/docker-compose -f docker-compose.toolkit.yml up -d
         
         #Configure httpd proxy
         cp /vagrant/toolkit/files/apache-elastic.conf /etc/httpd/conf.d/apache-elastic.conf
