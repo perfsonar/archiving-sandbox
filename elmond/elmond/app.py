@@ -13,7 +13,7 @@ def create_app(test_config=None):
     app = Flask(__name__)
     
     #Identify config files using ELMOND_ROOT envionment variable
-    config_dir = os.environ.get('ELMOND_ROOT', '/etc/elmond')
+    config_dir = os.environ.get('ELMOND_ROOT', '/etc/perfsonar/elmond')
     config_filename = "{0}/elmond.json".format(config_dir)
     logging_config_filename = "{0}/logging.conf".format(config_dir)
     
