@@ -1,0 +1,12 @@
+[Unit]
+Description=Perfsonar Elmond
+
+[Service]
+User=perfsonar
+Group=perfsonar
+WorkingDirectory=/usr/lib/perfsonar/elmond
+ExecStart=/usr/bin/python3 /usr/lib/perfsonar/elmond/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
