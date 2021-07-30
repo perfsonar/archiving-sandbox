@@ -34,10 +34,8 @@ A package that installs the perfSONAR Elmond which converts Esmond queries to qu
 %setup -q -n %{name}-%{version}.%{perfsonar_auto_relnum}
 
 %build
-#python3 setup.py build
 
 %install
-#python3 setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 make ROOTPATH=%{buildroot}%{elmond_base} CONFIGPATH=%{buildroot}%{config_base} install
 %{__install} -D -p -m 0644 systemd/elmond.service %{buildroot}%{_unitdir}/elmond.service
 
