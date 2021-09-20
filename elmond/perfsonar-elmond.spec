@@ -65,6 +65,7 @@ fi
 %{_unitdir}/elmond.service
 %exclude %{elmond_base}/*.pyc
 %exclude %{elmond_base}/*.pyo
+%exclude %{elmond_base}/__pycache__/*.pyc
 
 %changelog
 * Fri Jul 30 2021 Daniel Neto <daniel.neto@rnp.br> - 4.4.0-0.0.a1
