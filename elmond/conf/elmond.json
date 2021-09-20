@@ -1,11 +1,9 @@
 {
     "ELASTIC_HOSTS": [ "elasticsearch" ],
-    "#ELASTIC_PARAMS": {
-        "use_ssl": true
-    },
-    "#PROXY_PATH": "/esmond/perfsonar/archive",
-    "#FORCE_HTTPS_URLS": true,
-    "#SUMMARIES": {
+    "ELASTIC_PARAMS": {},
+    "PROXY_PATH": "/esmond/perfsonar/archive",
+    "FORCE_HTTPS_URLS": true,
+    "SUMMARIES": {
         "throughput": [
             {
                 "summary-window":   1800,
@@ -21,7 +19,7 @@
             }
         ]
     },
-    "#SUMMARY_WINDOW_ROLLUP_NAMES": {
+    "SUMMARY_WINDOW_ROLLUP_NAMES": {
         "300": "5m",
         "3600": "1h",
         "86400": "1d"
