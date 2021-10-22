@@ -275,7 +275,7 @@ class EsmondMetadataFieldParser:
         for et in self._get_event_types(test_spec):
             self.__add_event_type(et, target, md_key=md_key, time_added=time_added)
         self.__add_event_type('pscheduler-run-href', target, md_key=md_key, time_added=time_added)
-        self.__add_event_type('pscheduler-raw', target, md_key=md_key, time_added=time_added)
+        #self.__add_event_type('pscheduler-raw', target, md_key=md_key, time_added=time_added)
         
     def _parse_metadata_field(self, key, val, target):
         if type(val) is list:
